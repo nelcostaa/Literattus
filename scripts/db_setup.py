@@ -8,7 +8,7 @@ import os
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
-import oracledb
+import mysql.connector
 from loguru import logger
 
 # Load environment variables from project root
@@ -16,12 +16,14 @@ project_root = Path(__file__).parent.parent
 load_dotenv(project_root / 'env.example')
 
 def get_db_connection():
-    """Get Oracle database connection."""
+    """Get MySQL database connection."""
     try:
-        connection = oracledb.connect(
+        connection = mysql.connector.connect(
+            host=os.getenv('DB_HOST'),
+            port=int(os.getenv('DB_PORT', '3306')),
+            database=os.getenv('DB_NAME'),
             user=os.getenv('DB_USERNAME'),
-            REDACTED=os.getenv('DB_PASSWORD'),
-            dsn=f"{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_SERVICE_NAME')}"
+            REDACTED=os.getenv('DB_PASSWORD')
         )
         logger.info("Database connection established")
         return connection

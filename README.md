@@ -2,7 +2,7 @@
 
 [![Next.js](https://img.shields.io/badge/Next.js-14+-black?style=flat&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4+-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
-[![Oracle](https://img.shields.io/badge/Oracle-Database-red?style=flat&logo=oracle)](https://www.oracle.com/database/)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0+-blue?style=flat&logo=mysql)](https://www.mysql.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4+-38B2AC?style=flat&logo=tailwind-css)](https://tailwindcss.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -44,7 +44,7 @@
 
 ### **Backend**
 - **API**: Next.js API Routes with TypeScript
-- **Database**: [Oracle Database](https://www.oracle.com/database/) with enterprise-grade reliability
+- **Database**: [MySQL](https://www.mysql.com/) with reliable performance and scalability
 - **ORM**: [TypeORM](https://typeorm.io/) for type-safe database operations
 - **Authentication**: JWT-based authentication system
 
@@ -118,7 +118,7 @@ literattus/
 
 - **Node.js** 18.17.0 or higher
 - **npm** 9.0.0 or higher
-- **Oracle Database** (local or cloud instance)
+- **MySQL Database** (local or cloud instance)
 - **Python** 3.8+ (for utility scripts)
 
 ### **1. Clone the Repository**
@@ -157,8 +157,8 @@ nano .env  # or your preferred editor
 ```env
 # Database Configuration
 DB_HOST=localhost
-DB_PORT=1521
-DB_SERVICE_NAME=XEPDB1
+DB_PORT=3306
+DB_NAME=literattus
 DB_USERNAME=your_db_user
 DB_PASSWORD=your_db_REDACTED
 
@@ -226,7 +226,7 @@ python scripts/google_books_sync.py # Sync Google Books data
 
 ## 🗃️ Database Schema
 
-The application uses a robust Oracle database schema with the following main entities:
+The application uses a robust MySQL database schema with the following main entities:
 
 - **Users**: User accounts and profiles
 - **Books**: Book catalog with Google Books integration
