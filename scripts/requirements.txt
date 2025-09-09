@@ -1,0 +1,29 @@
+# Oracle Database Driver
+oracledb>=1.4.0
+
+# Environment Management
+python-dotenv>=1.0.0
+
+# HTTP Requests
+requests>=2.31.0
+
+# Data Processing
+pandas>=2.1.0
+numpy>=1.24.0
+
+# JSON Processing
+orjson>=3.9.0
+
+# CLI Tools
+click>=8.1.0
+rich>=13.5.0
+
+# Data Validation
+pydantic>=2.3.0
+
+# Async Support
+aiohttp>=3.8.0
+asyncio-mqtt>=0.13.0
+
+# Logging
+loguru>=0.7.0
