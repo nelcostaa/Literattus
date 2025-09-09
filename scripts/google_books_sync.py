@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 from dotenv import load_dotenv
 import requests
-import oracledb
+import mysql.connector
 from loguru import logger
 import json
 

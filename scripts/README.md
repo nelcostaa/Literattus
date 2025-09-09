@@ -37,9 +37,9 @@ python scripts/google_books_sync.py
 
 Make sure these variables are set in your `.env` file:
 
-- `DB_HOST`, `DB_PORT`, `DB_SERVICE_NAME`, `DB_USERNAME`, `DB_PASSWORD`
+- `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`
 - `GOOGLE_BOOKS_API_KEY`
 
-## Oracle Database Setup
+## MySQL Database Setup
 
-Ensure you have Oracle Instant Client installed for the `oracledb` package to work properly.
+Ensure you have MySQL server installed and running. The `mysql-connector-python` package will handle the database connectivity.

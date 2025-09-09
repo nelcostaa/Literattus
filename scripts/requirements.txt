@@ -1,5 +1,5 @@
-# Oracle Database Driver
-oracledb>=1.4.0
+# MySQL Database Driver
+mysql-connector-python>=8.3.0
 
 # Environment Management
 python-dotenv>=1.0.0
