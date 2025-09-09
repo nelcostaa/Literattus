@@ -1,5 +1,5 @@
 ---
-description: Regras de arquitetura e estilo para o projeto Literattus, usando Next.js, TypeORM, Oracle e Tailwind.
+description: Regras de arquitetura e estilo para o projeto Literattus, usando Next.js, TypeORM, MySQL e Tailwind.
 globs:
 alwaysApply: true
 ---
@@ -16,7 +16,7 @@ The project is Literattus, a full-stack Software as a Service (SaaS) platform de
 - **Framework:** Next.js 14+ with App Router.
 - **Language:** TypeScript in strict mode.
 - **Backend:** Next.js API Routes, running in a Node.js environment.
-- **Database:** Oracle, accessed exclusively via the TypeORM ORM.
+- **Database:** MySQL, accessed exclusively via the TypeORM ORM.
 - **Styling:** Tailwind CSS. Utility classes must be used directly in JSX.
 - **Scripts:** Utility scripts in the `/scripts` folder are written in Python.
 
@@ -47,7 +47,7 @@ The project is Literattus, a full-stack Software as a Service (SaaS) platform de
 
 - **Location:** Utility scripts must reside in the `/scripts` folder.
 - **Dependencies:** Python dependencies must be listed in `scripts/requirements.txt`.
-- **DB Access:** To access Oracle, scripts must use the `oracledb` library.
+- **DB Access:** To access MySQL, scripts must use the `mysql-connector-python` library.
 - **Environment Variables:** Use the `python-dotenv` library to load database credentials from the `.env.example` file in the project root.
 
 ## 7. Good General Practices
