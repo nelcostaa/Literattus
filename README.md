@@ -299,17 +299,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Google Books API](https://developers.google.com/books) for book data
 - [Radix UI](https://www.radix-ui.com/) for accessible component primitives
 
-## 📞 Support
-
-If you have any questions or need help getting started:
-
-- 📧 Email: support@literattus.com
-- 💬 Discord: [Join our community](https://discord.gg/literattus)
-- 📖 Documentation: [docs.literattus.com](https://docs.literattus.com)
-- 🐛 Bug Reports: [GitHub Issues](https://github.com/your-username/literattus/issues)
-
----
-
 **Happy Reading! 📚✨**
 
 *Built with ❤️ by the Literattus team*
