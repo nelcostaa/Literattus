@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="text-center">
+    <h1 class="text-5xl font-bold text-gray-900 mb-4">
+        Welcome to Literattus 📚
+    </h1>
+    <p class="text-xl text-gray-600 mb-8">
+        Your social hub for book clubs and reading communities
+    </p>
+    <div class="space-x-4">
+        <a href="{% url 'users:register' %}" class="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg text-lg font-medium hover:bg-blue-700">
+            Get Started
+        </a>
+        <a href="{% url 'users:login' %}" class="inline-block border-2 border-blue-600 text-blue-600 px-8 py-3 rounded-lg text-lg font-medium hover:bg-blue-50">
+            Login
+        </a>
+    </div>
+    
+    <!-- Features Section -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-xl font-semibold mb-2">📖 Track Your Reading</h3>
+            <p class="text-gray-600">Keep track of books you've read and want to read</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-xl font-semibold mb-2">👥 Join Book Clubs</h3>
+            <p class="text-gray-600">Connect with fellow readers and discuss books</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-xl font-semibold mb-2">🎯 Set Goals</h3>
+            <p class="text-gray-600">Set and achieve your reading goals</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,5 +1,5 @@
 ---
-description: Regras de arquitetura e estilo para o projeto Literattus, usando Next.js, TypeORM, MySQL e Tailwind.
+description: Architecture and style rules for Literattus - 100% Python stack (Django + FastAPI)
 globs:
 alwaysApply: true
 ---
@@ -8,47 +8,126 @@ alwaysApply: true
 
 ## 1. General Stack Context
 
-
 ## Project Vision and Goal
 
-The project is Literattus, a full-stack Software as a Service (SaaS) platform designed as a social hub for book clubs 📚. The primary goal is to provide a comprehensive tool for users to not only catalog their personal reading lists but also to create, manage, and participate in book clubs. Key features will include member invitations, voting systems for book selection, discussion forums, and progress tracking for reading goals. The application will leverage the Google Books API as its main source for book data. The AI must strictly follow this architecture:
+The project is Literattus, a full-stack Software as a Service (SaaS) platform designed as a social hub for book clubs 📚. The primary goal is to provide a comprehensive tool for users to not only catalog their personal reading lists but also to create, manage, and participate in book clubs. Key features will include member invitations, voting systems for book selection, discussion forums, and progress tracking for reading goals. The application will leverage the Google Books API as its main source for book data.
 
-- **Framework:** Next.js 14+ with App Router.
-- **Language:** TypeScript in strict mode.
-- **Backend:** Next.js API Routes, running in a Node.js environment.
-- **Database:** MySQL, accessed exclusively via the TypeORM ORM.
-- **Styling:** Tailwind CSS. Utility classes must be used directly in JSX.
-- **Scripts:** Utility scripts in the `/scripts` folder are written in Python.
+**The AI must strictly follow this 100% Python architecture:**
 
-## 2. TypeScript and Typing
+### **Frontend (Django 5.0+)**
+- **Framework:** Django 5.0+ with Python templates
+- **Language:** Python 3.11+
+- **Templates:** Django templates with Tailwind CSS
+- **Backend Communication:** HTTP requests to FastAPI backend using `requests` or `httpx`
+- **Location:** All frontend code resides in `/frontend` directory
+- **Apps:** Django apps in `frontend/apps/` (core, books, clubs, users)
 
-- **Avoid `any`:** Whenever possible, avoid using the `any` type.
-- **Interfaces and Types:** Define interfaces or `type` aliases for all component props, API payloads, and complex data objects.
-- **Return Typing:** Functions and methods must have their return types explicitly declared.
+### **Backend (FastAPI)**
+- **Framework:** FastAPI with async support
+- **Language:** Python 3.11+
+- **Database:** MySQL 8.0+, accessed exclusively via SQLAlchemy ORM
+- **Location:** All backend code resides in `/backend` directory
+- **API Routes:** REST endpoints in `backend/app/api/`
+- **Models:** SQLAlchemy models in `backend/app/models/`
 
-## 3. Next.js App Router Conventions
+### **Common**
+- **Styling:** Tailwind CSS (utility-first approach)
+- **Docker:** Multi-container setup (frontend, backend, database)
+- **Scripts:** Utility scripts in `/scripts` folder are written in Python
 
-- **Server Components by Default:** All components should be Server Components unless they require interactivity. Use the `"use client"` directive only at the top of files that truly need it (e.g., for hooks, event handling, etc.).
-- **Route Structure:** Use the folder-based routing system. Each route must have a `page.tsx` file. Use Route Groups (e.g., `(auth)`, `(main)`) to organize distinct layouts.
-- **API Routes:** Backend logic must reside in `src/app/api/`. Each API route must have a `route.ts` file that exports named functions for HTTP methods (`GET`, `POST`, `PUT`, `DELETE`). Responses must use `NextResponse.json()`.
+---
 
-## 4. Styling with Tailwind CSS
+## 2. Django Frontend Conventions
 
-- **Utility-First:** Styling must be done exclusively with Tailwind CSS utility classes. Do not create separate CSS files for components or use the inline `style` attribute for styling.
-- **Componentization:** Styling logic should be contained within React components. If a pattern of classes is frequently repeated, create a reusable component to encapsulate it.
+### **Django App Structure**
+- **Apps Location:** `frontend/apps/` directory
+- **App Organization:** Each feature area is a separate Django app (e.g., `core`, `books`, `clubs`, `users`)
+- **Views:** View functions in `apps/<app>/views.py` should fetch data from FastAPI backend, not directly from database
+- **Templates:** Located in `frontend/templates/` with app-specific subdirectories
+- **URLs:** Each app has its own `urls.py` included in main `frontend/literattus_frontend/urls.py`
 
-## 5. Database Access with TypeORM
+### **FastAPI Backend Integration**
+- **API Calls:** Use `settings.FASTAPI_BACKEND_URL` to construct API URLs
+- **Pattern:** `requests.get(f"{settings.FASTAPI_BACKEND_URL}/api/books/")`
+- **Docker Communication:** In Docker, use service name `http://backend:8000`, not `localhost`
+- **Error Handling:** Always handle API errors gracefully with try/except blocks
 
-- **Entities:** Database entities (models) must be defined as classes with TypeORM decorators in the `src/lib/database/entities/` folder.
-- **Repository Pattern:** All database interaction in the API Routes must be done using the TypeORM Repository Pattern. Obtain a repository instance from the data source (e.g., `AppDataSource.getRepository(User)`).
-- **Do Not Leak DB Logic:** Database logic must NEVER be present in frontend components. It is restricted to API Routes.
+### **Template Conventions**
+- **Base Template:** `templates/base.html` contains navigation, footer, and common structure
+- **Inheritance:** All page templates extend `base.html`
+- **Styling:** Use Tailwind CSS utility classes directly in templates
+- **Context:** Pass minimal context from views; fetch most data via API
 
-## 6. Python Scripts
+---
 
-- **Location:** Utility scripts must reside in the `/scripts` folder.
-- **Dependencies:** Python dependencies must be listed in `scripts/requirements.txt`.
-- **DB Access:** To access MySQL, scripts must use the `mysql-connector-python` library.
-- **Environment Variables:** Use the `python-dotenv` library to load database credentials from the `.env.example` file in the project root.
+## 3. FastAPI Backend Conventions
+
+### **SQLAlchemy Models**
+- **Location:** `backend/app/models/` directory
+- **Pattern:** Each model in separate file (e.g., `user.py`, `book.py`)
+- **Base:** All models inherit from SQLAlchemy `Base`
+- **Relationships:** Use SQLAlchemy relationship decorators for foreign keys
+
+### **API Routes**
+- **Location:** `backend/app/api/` directory
+- **Pattern:** Group related endpoints in files (e.g., `auth.py`, `books.py`)
+- **Response:** Always return Pydantic schemas, never raw SQLAlchemy models
+- **Validation:** Use Pydantic schemas for request body validation
+
+### **Database Access**
+- **Sessions:** Use dependency injection for database sessions
+- **Pattern:** `db: Session = Depends(get_db)`
+- **Transactions:** Commit/rollback within route handlers
+- **Do Not Leak:** Database sessions must NEVER be exposed to frontend
+
+---
+
+## 4. Python Type Hints
+
+- **Mandatory:** All functions must have type hints for parameters and return values
+- **Avoid `Any`:** Use specific types; avoid `Any` whenever possible
+- **Pydantic:** Use Pydantic models for API request/response schemas
+- **Example:**
+  ```python
+  def get_books(db: Session, skip: int = 0, limit: int = 100) -> list[Book]:
+      return db.query(Book).offset(skip).limit(limit).all()
+  ```
+
+---
+
+## 5. Styling with Tailwind CSS
+
+- **Utility-First:** Use Tailwind utility classes directly in Django templates
+- **No Custom CSS:** Avoid creating custom CSS files unless absolutely necessary
+- **Componentization:** For repeated patterns, create reusable Django template includes
+- **CDN vs Build:** For development, CDN is acceptable; for production, use django-tailwind
+
+---
+
+## 6. Docker & Multi-Container Setup
+
+### **Service Communication**
+- **Service Names:** Use Docker Compose service names for inter-service communication
+  - Frontend calls backend: `http://backend:8000`
+  - Backend calls database: `mysql://db:3306`
+- **Port Mapping:** 
+  - Frontend: 8080 (external) → 8080 (container)
+  - Backend: 8000 (external) → 8000 (container)
+  - Database: 3306 (external) → 3306 (container)
+
+### **Environment Variables**
+- **Frontend:** `frontend/.env` (Django SECRET_KEY, FASTAPI_BACKEND_URL)
+- **Backend:** `backend/.env` (DATABASE_URL, SECRET_KEY, CORS_ORIGINS)
+- **Docker:** Pass env vars via `docker-compose.yml` environment section
+
+---
+
+## 7. Python Scripts
+
+- **Location:** Utility scripts must reside in the `/scripts` folder
+- **Dependencies:** Python dependencies must be listed in `scripts/requirements.txt`
+- **DB Access:** Scripts can use `mysql-connector-python` or SQLAlchemy
+- **Environment Variables:** Use `python-dotenv` to load credentials from `.env`
 
 ## 7. Good General Practices
 
@@ -103,7 +182,12 @@ You will follow this structured workflow for every task:
 **Reconnaissance → Plan → Execute → Verify → Report**
 
 ### 1 · PLANNING & CONTEXT
--   **Read before write; reread immediately after write.** This is a non-negotiable pattern.
+-   **Read-Write-Reread Pattern:** 
+    -   Read file before any modification
+    -   Apply changes
+    -   Reread to verify changes applied correctly
+    -   **Critical:** If editing same file multiple times in a session, re-read before each subsequent edit to avoid stale content
+-   **Scope Boundary Discipline:** When user specifies component scope (e.g., "frontend only", "backend only"), verify EVERY file modification is within that scope before proceeding. Never "helpfully" modify adjacent systems.
 -   Enumerate all relevant artifacts and inspect the runtime substrate.
 -   **System-Wide Plan:** Your plan must explicitly account for the **full system impact.** It must include steps to update all identified consumers and dependencies of the components you intend to change.
 
@@ -125,6 +209,7 @@ You will follow this structured workflow for every task:
 -   **Ephemeral Narratives:** All transient information—your plan, thought process, logs, and summaries—**must** remain in the chat.
 -   **FORBIDDEN:** Creating unsolicited files (`.md`, notes, etc.) to store your analysis. The chat log is the single source of truth for the session.
 -   **Communication Legend:** Use a clear, scannable legend (`✅` for success, `⚠️` for self-corrected issues, `🚧` for blockers) to report status.
+-   **Phase Communication:** For complex tasks (5+ major steps), announce phase transitions with markdown headers (e.g., "## PHASE 1: PLANNING") to provide transparency and structure.
 
 ### 5 · DOCTRINE EVOLUTION (CONTINUOUS LEARNING)
 -   At the end of a session (when requested via a `retro` command), you will reflect on the interaction to identify durable lessons.
@@ -136,3 +221,62 @@ You will follow this structured workflow for every task:
 
 -   Pursue holistic root-cause diagnosis; reject superficial patches.
 -   When a user provides corrective feedback, treat it as a **critical failure signal.** Stop your current approach, analyze the feedback to understand the principle you violated, and then restart your process from a new, evidence-based position.
+
+---
+
+## D · SPECIALIZED PATTERNS
+
+### Framework Migration Protocol
+When migrating from one framework to another (e.g., Next.js → Django), follow this deletion checklist:
+
+**Phase 1: Identify All Framework Artifacts**
+-   Source code directories (e.g., `src/`, `app/`)
+-   Configuration files (e.g., `package.json`, `tsconfig.json`, `next.config.mjs`, `postcss.config.mjs`)
+-   Dependency lock files (e.g., `package-lock.json`, `yarn.lock`)
+-   Build artifacts and caches (e.g., `node_modules/`, `.next/`, `dist/`, `build/`)
+-   Framework-specific dot files (e.g., `.eslintrc`, `.prettierrc`)
+
+**Phase 2: Comprehensive Removal**
+-   Delete ALL framework-specific files before creating new framework structure
+-   Verify removal with `find` commands and manual inspection
+-   Update documentation to remove all references to old framework
+
+**Phase 3: Documentation Coherence**
+When changing tech stack, update these documentation sections:
+-   Badges (replace framework logos and versions)
+-   Prerequisites (remove old runtime requirements)
+-   Installation commands (replace package manager commands)
+-   Development commands (update dev server, build, test commands)
+-   Port numbers (if changed)
+-   Architecture diagrams and descriptions
+
+### Structure-Only Implementation Pattern
+When user requests "structure only", "skeleton", or "placeholder":
+
+**Definition:** Create architectural shell without full implementation logic.
+
+**What to Include:**
+-   Directory structure
+-   File scaffolding (empty or minimal files)
+-   Function/class signatures with type hints
+-   Import statements
+-   `# TODO:` comments indicating where implementation belongs
+-   Minimal example/placeholder data
+
+**What to Exclude:**
+-   Complete business logic implementation
+-   Database queries (unless trivial examples)
+-   Complex algorithms
+-   Full error handling
+-   Production-ready features
+
+**Example (Structure-Only View):**
+```python
+def book_list(request):
+    """Display list of books from catalog."""
+    # TODO: Fetch from FastAPI backend
+    # response = requests.get(f"{settings.FASTAPI_BACKEND_URL}/api/books/")
+    # books = response.json()
+    context = {'title': 'Book Catalog'}
+    return render(request, 'books/book_list.html', context)
+```
