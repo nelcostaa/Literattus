@@ -1,10 +1,10 @@
 # 📚 Literattus - Your Book Club Social Hub
 
-[![Next.js](https://img.shields.io/badge/Next.js-14+-black?style=flat&logo=next.js)](https://nextjs.org/)
 [![Python](https://img.shields.io/badge/Python-3.11+-blue?style=flat&logo=python)](https://www.python.org/)
+[![Django](https://img.shields.io/badge/Django-5.0+-green?style=flat&logo=django)](https://www.djangoproject.com/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.109+-009688?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.4+-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0+-blue?style=flat&logo=mysql)](https://www.mysql.com/)
+[![Docker](https://img.shields.io/badge/Docker-Enabled-blue?style=flat&logo=docker)](https://www.docker.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4+-38B2AC?style=flat&logo=tailwind-css)](https://tailwindcss.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -38,11 +38,12 @@
 
 ## 🏗️ Architecture & Tech Stack
 
-### **Frontend**
-- **Framework**: [Next.js 14+](https://nextjs.org/) with App Router
-- **Language**: [TypeScript](https://www.typescriptlang.org/) in strict mode
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/) utility-first approach
-- **UI Components**: Custom component library built with Radix UI primitives
+### **Frontend** 🐍
+- **Framework**: [Django 5.0+](https://www.djangoproject.com/)
+- **Language**: [Python 3.11+](https://www.python.org/)
+- **Templates**: Django templates with Tailwind CSS
+- **Backend Communication**: HTTP requests to FastAPI backend
+- **Server**: Gunicorn WSGI server
 
 ### **Backend** 🐍
 - **Framework**: [FastAPI](https://fastapi.tiangolo.com/) - Modern Python web framework
@@ -68,79 +69,66 @@
 
 ```
 literattus/
-├── 📂 backend/                  # Python FastAPI Backend
+├── 📂 frontend/                 # Django Frontend (Python)
+│   ├── 📂 literattus_frontend/ # Django project
+│   │   ├── 📄 settings.py      # Django configuration
+│   │   ├── 📄 urls.py          # URL routing
+│   │   ├── 📄 wsgi.py          # WSGI application
+│   │   └── 📄 asgi.py          # ASGI application
+│   ├── 📂 apps/                # Django apps
+│   │   ├── 📂 core/            # Home & dashboard
+│   │   ├── 📂 books/           # Book catalog
+│   │   ├── 📂 clubs/           # Club management
+│   │   └── 📂 users/           # Authentication
+│   ├── 📂 templates/           # Django templates
+│   │   ├── 📄 base.html        # Base template
+│   │   ├── 📂 auth/            # Auth pages
+│   │   ├── 📂 main/            # Main pages
+│   │   ├── 📂 books/           # Book pages
+│   │   └── 📂 clubs/           # Club pages
+│   ├── 📂 static/              # Static files
+│   │   ├── 📂 css/
+│   │   ├── 📂 js/
+│   │   └── 📂 images/
+│   ├── 📄 manage.py            # Django management
+│   ├── 📄 requirements.txt     # Python dependencies
+│   ├── 📄 Dockerfile           # Docker configuration
+│   └── 📄 README.md            # Frontend documentation
+├── 📂 backend/                  # FastAPI Backend (Python)
 │   ├── 📂 app/
 │   │   ├── 📂 api/             # API route handlers
-│   │   │   ├── 📄 auth.py      # Authentication endpoints
-│   │   │   ├── 📄 users.py     # User management
-│   │   │   ├── 📄 books.py     # Books & Google Books API
-│   │   │   └── 📄 clubs.py     # Club management
-│   │   ├── 📂 models/          # SQLAlchemy ORM models
-│   │   │   ├── 📄 user.py
-│   │   │   ├── 📄 book.py
-│   │   │   ├── 📄 club.py
-│   │   │   ├── 📄 club_member.py
-│   │   │   ├── 📄 reading_progress.py
-│   │   │   └── 📄 discussion.py
+│   │   │   ├── 📄 auth.py
+│   │   │   ├── 📄 users.py
+│   │   │   ├── 📄 books.py
+│   │   │   └── 📄 clubs.py
+│   │   ├── 📂 models/          # SQLAlchemy ORM models (6 models)
 │   │   ├── 📂 schemas/         # Pydantic validation schemas
-│   │   ├── 📂 core/            # Core functionality
-│   │   │   ├── 📄 config.py    # Configuration
-│   │   │   ├── 📄 database.py  # Database connection
-│   │   │   └── 📄 security.py  # Auth & JWT
-│   │   ├── 📂 services/        # Business logic
-│   │   │   └── 📄 google_books.py
-│   │   └── 📄 main.py          # FastAPI app entry point
+│   │   ├── 📂 core/            # Configuration & security
+│   │   ├── 📂 services/        # Google Books API
+│   │   └── 📄 main.py          # FastAPI entry point
 │   ├── 📂 tests/               # Pytest test suite
-│   ├── 📂 scripts/             # Setup & migration scripts
 │   ├── 📄 requirements.txt     # Python dependencies
 │   ├── 📄 Dockerfile           # Docker configuration
 │   └── 📄 README.md            # Backend documentation
-├── 📂 src/                      # Next.js Frontend
-│   ├── 📂 app/                 # Next.js App Router
-│   │   ├── 📂 (auth)/          # Authentication pages
-│   │   │   ├── 📂 login/
-│   │   │   ├── 📂 register/
-│   │   │   └── 📂 forgot-REDACTED/
-│   │   ├── 📂 (main)/          # Main application pages
-│   │   │   ├── 📂 dashboard/
-│   │   │   ├── 📂 clubs/
-│   │   │   ├── 📂 books/
-│   │   │   ├── 📂 profile/
-│   │   │   └── 📂 settings/
-│   │   ├── 📄 layout.tsx       # Root layout
-│   │   ├── 📄 page.tsx         # Home page
-│   │   └── 📄 globals.css      # Global styles
-│   ├── 📂 components/          # React components
-│   │   ├── 📂 ui/              # Reusable UI components
-│   │   ├── 📂 features/        # Feature components
-│   │   └── 📂 layout/          # Layout components
-│   ├── 📂 lib/                 # Utility libraries
-│   │   ├── 📂 utils/           # Helper functions
-│   │   └── 📂 api/             # API client for backend
-│   └── 📂 types/               # TypeScript definitions
-├── 📂 scripts/                 # Utility scripts
-│   ├── 📄 requirements.txt     # Python dependencies
-│   ├── 📄 db_setup.py          # Database utilities
-│   └── 📄 google_books_sync.py # Google Books sync
-├── 📂 public/                  # Static assets
+├── 📂 scripts/                 # Utility scripts (Python)
+│   ├── 📄 db_setup.py
+│   └── 📄 google_books_sync.py
+├── 📂 public/                  # Public assets
 │   ├── 📂 images/
-│   ├── 📂 icons/
 │   └── 📂 uploads/
-├── 📄 package.json             # Node.js dependencies
-├── 📄 tsconfig.json            # TypeScript configuration
-├── 📄 tailwind.config.ts       # Tailwind CSS configuration
-├── 📄 next.config.mjs          # Next.js configuration
-└── 📄 env.example              # Environment template
+├── 📄 docker-compose.yml       # Multi-container setup
+├── 📄 README.md                # Project documentation
+├── 📄 QUICKSTART.md            # Quick start guide
+└── 📄 MIGRATION_COMPLETE.md    # Migration notes
 ```
 
 ## 🚀 Getting Started
 
 ### **Prerequisites**
 
-- **Python** 3.11+ (for backend)
-- **Node.js** 18.17.0+ (for frontend)
-- **npm** 9.0.0+ (for frontend)
-- **MySQL** 8.0+ (local or AWS RDS)
+- **Python** 3.11+ (for frontend & backend)
+- **MySQL** 8.0+ (local or AWS RDS or Docker)
+- **Docker & Docker Compose** (recommended)
 - **Git** for version control
 
 ### **1. Clone the Repository**
@@ -164,10 +152,16 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-**Frontend (Next.js):**
+**Frontend (Django):**
 ```bash
-cd ..  # Back to project root
-npm install
+cd ../frontend
+python -m venv venv
+
+# Activate virtual environment
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install Python dependencies
+pip install -r requirements.txt
 ```
 
 ### **3. Environment Configuration**
@@ -196,23 +190,29 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 # Google Books API
 GOOGLE_BOOKS_API_KEY=your_google_books_api_key
 
-# CORS (Next.js frontend URL)
-CORS_ORIGINS=["http://localhost:3000"]
+# CORS (Django frontend URL)
+CORS_ORIGINS=["http://localhost:8080"]
 ```
 
 **Frontend Configuration:**
 ```bash
-cd ..  # Back to project root
+cd ../frontend
 cp env.example .env
-# Edit .env with frontend settings
+# Edit frontend/.env with your settings
 ```
 
 **Required Frontend Variables:**
 ```env
-# Backend API URL
-NEXT_PUBLIC_API_URL=http://localhost:8000
+# Django Configuration
+SECRET_KEY=django-secret-key-change-in-production
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
 
-# Other Next.js settings
+# Backend API URL
+FASTAPI_BACKEND_URL=http://localhost:8000
+
+# CORS
+CORS_ALLOWED_ORIGINS=http://localhost:8080,http://127.0.0.1:8080
 NODE_ENV=development
 APP_URL=http://localhost:3000
 ```
@@ -255,14 +255,15 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 Backend will run at: http://localhost:8000
 - **API Docs**: http://localhost:8000/api/docs
 
-**Terminal 2 - Frontend (Next.js):**
+**Terminal 2 - Frontend (Django):**
 ```bash
-# From project root
-npm run dev
+cd frontend
+source venv/bin/activate  # Windows: venv\Scripts\activate
+python manage.py runserver 0.0.0.0:8080
 ```
-Frontend will run at: http://localhost:3000
+Frontend will run at: http://localhost:8080
 
-🎉 **Visit http://localhost:3000 to use the application!**
+🎉 **Visit http://localhost:8080 to use the application!**
 
 ## 🛠️ Development Commands
 
@@ -286,15 +287,24 @@ alembic upgrade head
 alembic downgrade -1
 ```
 
-### **Frontend (Next.js)**
+### **Frontend (Django)**
 ```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run start        # Start production server
-npm run lint         # Run ESLint
-npm run lint:fix     # Fix ESLint issues
-npm run type-check   # Run TypeScript type checking
-npm run format       # Format code with Prettier
+# Start development server
+cd frontend
+python manage.py runserver 0.0.0.0:8080
+
+# Run migrations
+python manage.py makemigrations
+python manage.py migrate
+
+# Create superuser
+python manage.py createsuperuser
+
+# Collect static files
+python manage.py collectstatic
+
+# Django shell
+python manage.py shell
 ```
 
 ### **Utility Scripts**
@@ -308,15 +318,22 @@ python scripts/google_books_sync.py
 
 ### **Docker (Full Stack)**
 ```bash
-# Start both backend and database
-cd backend
+# Start all services (frontend, backend, database)
 docker-compose up -d
 
 # View logs
 docker-compose logs -f
 
-# Stop services
+# View specific service logs
+docker-compose logs -f frontend
+docker-compose logs -f backend
+docker-compose logs -f db
+
+# Stop all services
 docker-compose down
+
+# Rebuild and start
+docker-compose up --build
 ```
 
 ## 🗃️ Database Schema
