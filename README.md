@@ -1,6 +1,8 @@
 # 📚 Literattus - Your Book Club Social Hub
 
 [![Next.js](https://img.shields.io/badge/Next.js-14+-black?style=flat&logo=next.js)](https://nextjs.org/)
+[![Python](https://img.shields.io/badge/Python-3.11+-blue?style=flat&logo=python)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.109+-009688?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4+-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0+-blue?style=flat&logo=mysql)](https://www.mysql.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4+-38B2AC?style=flat&logo=tailwind-css)](https://tailwindcss.com/)
@@ -42,11 +44,14 @@
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/) utility-first approach
 - **UI Components**: Custom component library built with Radix UI primitives
 
-### **Backend**
-- **API**: Next.js API Routes with TypeScript
-- **Database**: [MySQL](https://www.mysql.com/) with reliable performance and scalability
-- **ORM**: [TypeORM](https://typeorm.io/) for type-safe database operations
-- **Authentication**: JWT-based authentication system
+### **Backend** 🐍
+- **Framework**: [FastAPI](https://fastapi.tiangolo.com/) - Modern Python web framework
+- **Language**: [Python 3.11+](https://www.python.org/)
+- **Database**: [MySQL 8.0+](https://www.mysql.com/) with AWS RDS support
+- **ORM**: [SQLAlchemy 2.0+](https://www.sqlalchemy.org/) for database operations
+- **Authentication**: JWT with passlib (bcrypt) for secure password hashing
+- **Validation**: [Pydantic V2](https://docs.pydantic.dev/) for request/response validation
+- **API Documentation**: Auto-generated Swagger UI and ReDoc
 
 ### **External Integrations**
 - **Google Books API**: Rich book metadata and cover images
@@ -63,63 +68,80 @@
 
 ```
 literattus/
-├── 📂 src/
-│   ├── 📂 app/                    # Next.js App Router
-│   │   ├── 📂 (auth)/            # Authentication routes
+├── 📂 backend/                  # Python FastAPI Backend
+│   ├── 📂 app/
+│   │   ├── 📂 api/             # API route handlers
+│   │   │   ├── 📄 auth.py      # Authentication endpoints
+│   │   │   ├── 📄 users.py     # User management
+│   │   │   ├── 📄 books.py     # Books & Google Books API
+│   │   │   └── 📄 clubs.py     # Club management
+│   │   ├── 📂 models/          # SQLAlchemy ORM models
+│   │   │   ├── 📄 user.py
+│   │   │   ├── 📄 book.py
+│   │   │   ├── 📄 club.py
+│   │   │   ├── 📄 club_member.py
+│   │   │   ├── 📄 reading_progress.py
+│   │   │   └── 📄 discussion.py
+│   │   ├── 📂 schemas/         # Pydantic validation schemas
+│   │   ├── 📂 core/            # Core functionality
+│   │   │   ├── 📄 config.py    # Configuration
+│   │   │   ├── 📄 database.py  # Database connection
+│   │   │   └── 📄 security.py  # Auth & JWT
+│   │   ├── 📂 services/        # Business logic
+│   │   │   └── 📄 google_books.py
+│   │   └── 📄 main.py          # FastAPI app entry point
+│   ├── 📂 tests/               # Pytest test suite
+│   ├── 📂 scripts/             # Setup & migration scripts
+│   ├── 📄 requirements.txt     # Python dependencies
+│   ├── 📄 Dockerfile           # Docker configuration
+│   └── 📄 README.md            # Backend documentation
+├── 📂 src/                      # Next.js Frontend
+│   ├── 📂 app/                 # Next.js App Router
+│   │   ├── 📂 (auth)/          # Authentication pages
 │   │   │   ├── 📂 login/
 │   │   │   ├── 📂 register/
 │   │   │   └── 📂 forgot-password/
-│   │   ├── 📂 (main)/            # Main application routes
+│   │   ├── 📂 (main)/          # Main application pages
 │   │   │   ├── 📂 dashboard/
 │   │   │   ├── 📂 clubs/
 │   │   │   ├── 📂 books/
 │   │   │   ├── 📂 profile/
 │   │   │   └── 📂 settings/
-│   │   ├── 📂 api/               # API Routes
-│   │   │   ├── 📂 auth/
-│   │   │   ├── 📂 books/
-│   │   │   ├── 📂 clubs/
-│   │   │   └── 📂 users/
-│   │   ├── 📄 layout.tsx         # Root layout
-│   │   ├── 📄 page.tsx           # Home page
-│   │   └── 📄 globals.css        # Global styles
-│   ├── 📂 components/            # React components
-│   │   ├── 📂 ui/               # Reusable UI components
-│   │   ├── 📂 features/         # Feature-specific components
-│   │   └── 📂 layout/           # Layout components
-│   ├── 📂 lib/                  # Utility libraries
-│   │   ├── 📂 database/         # Database configuration
-│   │   │   ├── 📂 entities/     # TypeORM entities
-│   │   │   ├── 📂 migrations/   # Database migrations
-│   │   │   └── 📄 data-source.ts
-│   │   ├── 📂 utils/            # Utility functions
-│   │   └── 📂 validations/      # Input validation schemas
-│   └── 📂 types/                # TypeScript type definitions
-├── 📂 scripts/                  # Python utility scripts
-│   ├── 📄 requirements.txt      # Python dependencies
-│   ├── 📄 db_setup.py          # Database setup utility
-│   ├── 📄 google_books_sync.py # Google Books API sync
-│   └── 📄 README.md            # Scripts documentation
-├── 📂 public/                   # Static assets
-│   ├── 📂 images/              # Image assets
-│   ├── 📂 icons/               # Icon assets
-│   └── 📂 uploads/             # User uploaded files
+│   │   ├── 📄 layout.tsx       # Root layout
+│   │   ├── 📄 page.tsx         # Home page
+│   │   └── 📄 globals.css      # Global styles
+│   ├── 📂 components/          # React components
+│   │   ├── 📂 ui/              # Reusable UI components
+│   │   ├── 📂 features/        # Feature components
+│   │   └── 📂 layout/          # Layout components
+│   ├── 📂 lib/                 # Utility libraries
+│   │   ├── 📂 utils/           # Helper functions
+│   │   └── 📂 api/             # API client for backend
+│   └── 📂 types/               # TypeScript definitions
+├── 📂 scripts/                 # Utility scripts
+│   ├── 📄 requirements.txt     # Python dependencies
+│   ├── 📄 db_setup.py          # Database utilities
+│   └── 📄 google_books_sync.py # Google Books sync
+├── 📂 public/                  # Static assets
+│   ├── 📂 images/
+│   ├── 📂 icons/
+│   └── 📂 uploads/
 ├── 📄 package.json             # Node.js dependencies
 ├── 📄 tsconfig.json            # TypeScript configuration
 ├── 📄 tailwind.config.ts       # Tailwind CSS configuration
 ├── 📄 next.config.mjs          # Next.js configuration
-├── 📄 env.example              # Environment variables template
-└── 📄 .gitignore               # Git ignore rules
+└── 📄 env.example              # Environment template
 ```
 
 ## 🚀 Getting Started
 
 ### **Prerequisites**
 
-- **Node.js** 18.17.0 or higher
-- **npm** 9.0.0 or higher
-- **MySQL Database** (local or cloud instance)
-- **Python** 3.8+ (for utility scripts)
+- **Python** 3.11+ (for backend)
+- **Node.js** 18.17.0+ (for frontend)
+- **npm** 9.0.0+ (for frontend)
+- **MySQL** 8.0+ (local or AWS RDS)
+- **Git** for version control
 
 ### **1. Clone the Repository**
 
@@ -130,72 +152,141 @@ cd literattus
 
 ### **2. Install Dependencies**
 
+**Backend (Python FastAPI):**
 ```bash
-# Install Node.js dependencies
-npm install
-
-# Install Python dependencies for scripts
-cd scripts
+cd backend
 python -m venv venv
+
+# Activate virtual environment
 source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install Python dependencies
 pip install -r requirements.txt
-cd ..
+```
+
+**Frontend (Next.js):**
+```bash
+cd ..  # Back to project root
+npm install
 ```
 
 ### **3. Environment Configuration**
 
+**Backend Configuration:**
 ```bash
-# Copy environment template
+cd backend
 cp env.example .env
-
-# Edit .env with your configuration
-nano .env  # or your preferred editor
+# Edit backend/.env with your settings
 ```
 
-**Required Environment Variables:**
-
+**Required Backend Variables:**
 ```env
-# Database Configuration
-DB_HOST=localhost
+# Database (Local or AWS RDS)
+DATABASE_URL=mysql+pymysql://user:password@host:3306/literattus
+DB_HOST=localhost  # or your-rds-endpoint.amazonaws.com
 DB_PORT=3306
 DB_NAME=literattus
-DB_USERNAME=your_db_user
-DB_PASSWORD=your_db_password
+DB_USER=your_user
+DB_PASSWORD=your_password
+
+# Security
+SECRET_KEY=your-secret-key-min-32-characters-for-jwt
+ACCESS_TOKEN_EXPIRE_MINUTES=30
 
 # Google Books API
 GOOGLE_BOOKS_API_KEY=your_google_books_api_key
 
-# Authentication
-JWT_SECRET=your_jwt_secret_key
-NEXTAUTH_SECRET=your_nextauth_secret
+# CORS (Next.js frontend URL)
+CORS_ORIGINS=["http://localhost:3000"]
+```
 
-# Application
+**Frontend Configuration:**
+```bash
+cd ..  # Back to project root
+cp env.example .env
+# Edit .env with frontend settings
+```
+
+**Required Frontend Variables:**
+```env
+# Backend API URL
+NEXT_PUBLIC_API_URL=http://localhost:8000
+
+# Other Next.js settings
 NODE_ENV=development
 APP_URL=http://localhost:3000
 ```
 
 ### **4. Database Setup**
 
+**Option A: Local MySQL**
 ```bash
-# Run database setup script
-python scripts/db_setup.py
+# Create database
+mysql -u root -p
+CREATE DATABASE literattus CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+EXIT;
 
-# Generate and run migrations
-npm run db:generate
-npm run db:migrate
+# Initialize tables (from backend directory)
+cd backend
+python -c "from app.core.database import init_db; init_db()"
 ```
 
-### **5. Start Development Server**
-
+**Option B: AWS RDS MySQL**
 ```bash
+# Use the interactive setup wizard
+cd backend
+python scripts/aws_rds_setup.py
+
+# Follow the prompts to:
+# - Test connection
+# - Create database
+# - Migrate existing data (optional)
+# - Initialize schema
+```
+
+### **5. Start Development Servers**
+
+**Terminal 1 - Backend (FastAPI):**
+```bash
+cd backend
+source venv/bin/activate  # Windows: venv\Scripts\activate
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+Backend will run at: http://localhost:8000
+- **API Docs**: http://localhost:8000/api/docs
+
+**Terminal 2 - Frontend (Next.js):**
+```bash
+# From project root
 npm run dev
 ```
+Frontend will run at: http://localhost:3000
 
-Visit [http://localhost:3000](http://localhost:3000) to see your application running!
+🎉 **Visit http://localhost:3000 to use the application!**
 
 ## 🛠️ Development Commands
 
-### **Frontend Development**
+### **Backend (Python FastAPI)**
+```bash
+# Start development server
+cd backend
+uvicorn app.main:app --reload --port 8000
+
+# Run tests
+pytest
+pytest --cov=app --cov-report=html
+
+# Code quality
+black app/              # Format code
+ruff check app/ --fix   # Lint and fix
+
+# Database migrations (Alembic)
+alembic revision --autogenerate -m "Description"
+alembic upgrade head
+alembic downgrade -1
+```
+
+### **Frontend (Next.js)**
 ```bash
 npm run dev          # Start development server
 npm run build        # Build for production
@@ -203,25 +294,29 @@ npm run start        # Start production server
 npm run lint         # Run ESLint
 npm run lint:fix     # Fix ESLint issues
 npm run type-check   # Run TypeScript type checking
-```
-
-### **Database Management**
-```bash
-npm run db:generate  # Generate new migration
-npm run db:migrate   # Run pending migrations
-npm run db:revert    # Revert last migration
-```
-
-### **Code Quality**
-```bash
 npm run format       # Format code with Prettier
-npm run format:check # Check code formatting
 ```
 
-### **Python Scripts**
+### **Utility Scripts**
 ```bash
-python scripts/db_setup.py         # Setup database
-python scripts/google_books_sync.py # Sync Google Books data
+# AWS RDS setup wizard
+python backend/scripts/aws_rds_setup.py
+
+# Google Books sync (legacy)
+python scripts/google_books_sync.py
+```
+
+### **Docker (Full Stack)**
+```bash
+# Start both backend and database
+cd backend
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
 ```
 
 ## 🗃️ Database Schema
