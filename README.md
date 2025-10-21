@@ -126,10 +126,58 @@ literattus/
 
 ### **Prerequisites**
 
-- **Python** 3.11+ (for frontend & backend)
-- **MySQL** 8.0+ (local or AWS RDS or Docker)
-- **Docker & Docker Compose** (recommended)
+- **Python** 3.10+ (for frontend & backend)
+- **MySQL** 8.0+ (local installation or Docker)
+- **Docker & Docker Compose** (recommended for easy setup)
 - **Git** for version control
+
+### **Quick Start - Local MySQL Development**
+
+For immediate database testing and development:
+
+```bash
+# 1. Install local dependencies
+pip install -r requirements-local.txt
+
+# 2. Copy environment file
+cp env.local .env
+
+# 3. Start MySQL (choose one option):
+
+# Option A: Docker (recommended)
+docker-compose -f docker-compose.local.yml up -d
+
+# Option B: Local MySQL installation
+# Ubuntu: sudo apt install mysql-server
+# macOS: brew install mysql
+# Windows: Download MySQL Installer
+
+# 4. Setup database schema
+python scripts/db_setup.py
+
+# 5. Test database connection
+python test.py
+```
+
+**Database Connection Details:**
+- Host: localhost:3306
+- Database: literattus
+- Username: literattus_user
+- Password: REDACTED
+
+**Interactive Testing:**
+```bash
+python test.py
+# Choose from menu:
+# 1. Test connection
+# 2. Show users
+# 3. Show books
+# 4. Show clubs
+# 5. Add sample data
+# 6. Interactive SQL mode
+```
+
+📖 **Detailed Setup Guide:** See [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md)
 
 ### **1. Clone the Repository**
 
@@ -138,7 +186,27 @@ git clone https://github.com/your-username/literattus.git
 cd literattus
 ```
 
-### **2. Install Dependencies**
+### **2. Local Development Setup**
+
+**Quick Database Testing:**
+```bash
+# Install local dependencies
+pip install -r requirements-local.txt
+
+# Copy environment file
+cp env.local .env
+
+# Start MySQL with Docker
+docker-compose -f docker-compose.local.yml up -d
+
+# Setup database schema
+python scripts/db_setup.py
+
+# Test database connection
+python test.py
+```
+
+**Full Stack Development:**
 
 **Backend (Python FastAPI):**
 ```bash
