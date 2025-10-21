@@ -1,0 +1,14 @@
+# Requirements for Literattus Local Development
+
+# Database Connection
+mysql-connector-python>=8.3.0
+
+# Environment Management
+python-dotenv>=1.0.0
+
+# Logging
+loguru>=0.7.2
+
+# Optional: For enhanced testing
+pytest>=7.4.0
+pytest-mock>=3.12.0
