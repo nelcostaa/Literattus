@@ -9,9 +9,7 @@ import sys
 from pathlib import Path
 from dotenv import load_dotenv
 import requests
-import mysql.connector
 from loguru import logger
-import json
 from typing import Optional, List, Dict, Any
 from dataclasses import dataclass
 
@@ -120,7 +118,7 @@ def main():
     
     sync = GoogleBooksSync()
     
-    results = sync.search_books("Eragon", 10)
+    results = sync.search_books("Budismo", 10)
     if results and 'items' in results:
         logger.info(f"Found {len(results['items'])} books")
         

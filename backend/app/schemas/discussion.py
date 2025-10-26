@@ -16,6 +16,7 @@ class DiscussionCreate(DiscussionBase):
     """Schema for creating a new discussion."""
     
     clubId: int
+    bookId: str = Field(..., min_length=1, max_length=12, description="Google Books ID")
     parentId: Optional[int] = None  # For replies
 
 
@@ -32,6 +33,7 @@ class DiscussionResponse(DiscussionBase):
     id: int
     clubId: int
     userId: int
+    bookId: str
     parentId: Optional[int]
     createdAt: datetime
     updatedAt: datetime

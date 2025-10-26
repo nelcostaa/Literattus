@@ -74,15 +74,15 @@ async def search_books(
 
 @router.get("/{book_id}", response_model=BookResponse)
 async def get_book(
-    book_id: int,
+    book_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
-    Get book by ID from local catalog.
+    Get book by Google Books ID from local catalog.
     
     Args:
-        book_id: Book ID
+        book_id: Google Books ID (string, max 12 chars)
         db: Database session
         current_user: Current authenticated user
         
@@ -124,33 +124,19 @@ async def create_book(
         HTTPException: If book with Google Books ID already exists
     """
     # Check if book already exists
-    existing_book = db.query(Book).filter(
-        Book.googleBooksId == book_data.googleBooksId
-    ).first()
+    existing_book = db.query(Book).filter(Book.id == book_data.id).first()
     
     if existing_book:
         return existing_book  # Return existing book instead of error
     
-    # Create new book
-    genres_str = ",".join(book_data.genres) if book_data.genres else None
-    
-    new_book = Book(
-        googleBooksId=book_data.googleBooksId,
-        title=book_data.title,
-        author=book_data.author,
-        isbn=book_data.isbn,
-        description=book_data.description,
-        coverImage=book_data.coverImage,
-        publishedDate=book_data.publishedDate,
-        pageCount=book_data.pageCount,
-        genres=genres_str,
-        averageRating=book_data.averageRating
-    )
+    # Create new book using BookCreate schema
+    new_book = Book(**book_data.model_dump())
     
     db.add(new_book)
     db.commit()
     db.refresh(new_book)
     
+    logger.info(f"Created new book: {new_book.title} (ID: {new_book.id})")
     return new_book
 
 
@@ -185,7 +171,7 @@ async def get_book_from_google(
 
 @router.put("/{book_id}", response_model=BookResponse)
 async def update_book(
-    book_id: int,
+    book_id: str,
     book_data: BookUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -239,9 +225,71 @@ async def update_book(
     return book
 
 
+@router.post("/search-and-save/{google_book_id}", response_model=BookResponse)
+async def search_and_save_book(
+    google_book_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Fetch book from Google Books API and save to database.
+    
+    Workflow:
+    1. Check if book already exists in DB
+    2. If not, fetch from Google Books API
+    3. Transform and save to database
+    4. Return saved book
+    
+    Args:
+        google_book_id: Google Books volume ID
+        db: Database session
+        current_user: Current authenticated user
+        
+    Returns:
+        BookResponse: Saved book object
+        
+    Raises:
+        HTTPException: If book not found in Google Books
+    """
+    from app.services.google_books import transform_to_book_create
+    
+    # Check if book exists in database
+    existing_book = db.query(Book).filter(Book.id == google_book_id).first()
+    if existing_book:
+        logger.info(f"Book already exists in database: {existing_book.title}")
+        return existing_book
+    
+    # Fetch from Google Books API
+    book_data = await google_books_service.get_book_by_id(google_book_id)
+    if not book_data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Book with ID {google_book_id} not found in Google Books"
+        )
+    
+    # Transform to BookCreate schema
+    try:
+        book_create = transform_to_book_create(book_data)
+    except Exception as e:
+        logger.error(f"Failed to transform book data: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to process book data from Google Books"
+        )
+    
+    # Save to database
+    new_book = Book(**book_create.model_dump())
+    db.add(new_book)
+    db.commit()
+    db.refresh(new_book)
+    
+    logger.success(f"Added book from Google Books: {new_book.title} (ID: {new_book.id})")
+    return new_book
+
+
 @router.delete("/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_book(
-    book_id: int,
+    book_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):

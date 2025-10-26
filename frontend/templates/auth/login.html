@@ -1,10 +1,20 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow">
+<div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow mt-8">
     <h1 class="text-2xl font-bold text-gray-900 mb-6">Login</h1>
     
-    <form method="post" action="{% url 'users:login' %}">
+    {% if messages %}
+    <div class="mb-4">
+        {% for message in messages %}
+        <div class="p-3 rounded-md mb-2 {% if message.tags == 'error' %}bg-red-100 text-red-700{% elif message.tags == 'success' %}bg-green-100 text-green-700{% else %}bg-blue-100 text-blue-700{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <form method="post" action="{% url 'core:login' %}">
         {% csrf_token %}
         
         <div class="mb-4">
@@ -26,7 +36,7 @@
     
     <p class="mt-4 text-center text-sm text-gray-600">
         Don't have an account?
-        <a href="{% url 'users:register' %}" class="text-blue-600 hover:text-blue-700 font-medium">Sign up</a>
+        <a href="{% url 'core:register' %}" class="text-blue-600 hover:text-blue-700 font-medium">Sign up</a>
     </p>
 </div>
 {% endblock %}
