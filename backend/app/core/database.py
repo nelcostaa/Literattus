@@ -75,16 +75,22 @@ def init_db() -> None:
     
     Note: In production, use Alembic migrations instead.
     """
-    logger.info("Initializing database tables...")
+    logger.info("Checking database connection...")
     try:
         # Import all models here to ensure they're registered
-        from app.models import user, book, club, club_member, reading_progress, discussion
+        from app.models import user, book, club, club_member, club_book, reading_progress, discussion
+        from sqlalchemy import text
         
-        Base.metadata.create_all(bind=engine)
-        logger.success("Database tables initialized successfully")
+        # Test connection instead of creating tables (tables already exist on RDS)
+        with engine.connect() as connection:
+            result = connection.execute(text("SELECT 1"))
+            result.fetchone()
+        
+        logger.success("Database connection successful")
     except Exception as e:
-        logger.error(f"Failed to initialize database: {e}")
-        raise
+        logger.error(f"Failed to connect to database: {e}")
+        logger.warning("Application will continue, but database operations may fail")
+        # Don't raise - let the application start anyway
 
 
 def close_db() -> None:

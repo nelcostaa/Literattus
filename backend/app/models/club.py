@@ -19,8 +19,8 @@ class Club(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
 
     # Club information
-    name = Column(String(200), nullable=False, index=True)
-    description = Column(Text, nullable=False)
+    name = Column(String(255), unique=True, nullable=False, index=True)
+    description = Column(Text, nullable=True)
     coverImage = Column("cover_image", String(1000), nullable=True)
 
     # Privacy settings
@@ -40,6 +40,8 @@ class Club(Base):
     createdBy = relationship("User", back_populates="createdClubs", foreign_keys=[createdById])
     members = relationship("ClubMember", back_populates="club", cascade="all, delete-orphan")
     discussions = relationship("Discussion", back_populates="club", cascade="all, delete-orphan")
+    clubBooks = relationship("ClubBook", back_populates="club", cascade="all, delete-orphan")
+    readingProgress = relationship("ReadingProgress", back_populates="club")
 
     def __repr__(self) -> str:
         return f"<Club(id={self.id}, name='{self.name}', members={len(self.members)})>"

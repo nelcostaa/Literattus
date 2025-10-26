@@ -4,10 +4,12 @@ Provides methods to search and fetch book data from Google Books API.
 """
 
 from typing import List, Optional, Dict, Any
+from datetime import date, datetime
 import httpx
 from loguru import logger
 
 from app.core.config import settings
+from app.schemas.book import BookCreate
 
 
 class GoogleBooksService:
@@ -156,6 +158,69 @@ class GoogleBooksService:
         except Exception as e:
             logger.error(f"Error parsing book data: {e}")
             return None
+
+
+def transform_to_book_create(google_book_data: Dict[str, Any]) -> BookCreate:
+    """
+    Transform Google Books API response to BookCreate schema.
+    
+    Args:
+        google_book_data: Raw book data from Google Books API
+        
+    Returns:
+        BookCreate: Pydantic schema ready for database insertion
+    """
+    volume_info = google_book_data.get("volumeInfo", {})
+    
+    # Extract ISBN-13 (preferred) or ISBN-10
+    isbn = None
+    for identifier in volume_info.get("industryIdentifiers", []):
+        if identifier.get("type") == "ISBN_13":
+            isbn = identifier.get("identifier")
+            break
+    if not isbn:  # Fallback to ISBN-10
+        for identifier in volume_info.get("industryIdentifiers", []):
+            if identifier.get("type") == "ISBN_10":
+                isbn = identifier.get("identifier")
+                break
+    
+    # Parse published date - handle various formats
+    published_date = None
+    if date_str := volume_info.get("publishedDate"):
+        try:
+            # Try full date: "2023-01-15"
+            published_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        except ValueError:
+            try:
+                # Try year-month: "2023-01"
+                published_date = datetime.strptime(date_str + "-01", "%Y-%m-%d").date()
+            except ValueError:
+                try:
+                    # Try year only: "2023"
+                    published_date = datetime.strptime(date_str + "-01-01", "%Y-%m-%d").date()
+                except ValueError:
+                    logger.warning(f"Could not parse date: {date_str}")
+    
+    # Extract cover image (prefer higher resolution)
+    image_links = volume_info.get("imageLinks", {})
+    cover_image = (
+        image_links.get("large") or
+        image_links.get("medium") or
+        image_links.get("small") or
+        image_links.get("thumbnail")
+    )
+    
+    # Create BookCreate schema
+    return BookCreate(
+        id=google_book_data.get("id"),
+        title=volume_info.get("title", "Unknown Title"),
+        author=", ".join(volume_info.get("authors", ["Unknown Author"])),
+        description=volume_info.get("description"),
+        coverImage=cover_image,
+        isbn=isbn,
+        publishedDate=published_date,
+        pageCount=volume_info.get("pageCount")
+    )
 
 
 # Global service instance

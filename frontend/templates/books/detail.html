@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-6">
+        <a href="{% url 'books:catalog' %}" class="text-blue-600 hover:underline">← Back to Catalog</a>
+    </div>
+    
+    {% if book %}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Book Cover -->
+        <div class="md:col-span-1">
+            {% if book.coverImage %}
+            <img src="{{ book.coverImage }}" 
+                 alt="{{ book.title }}"
+                 class="w-full rounded-lg shadow-lg">
+            {% else %}
+            <div class="w-full h-96 bg-gray-200 rounded-lg flex items-center justify-center">
+                <span class="text-gray-400">No cover available</span>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Book Details -->
+        <div class="md:col-span-2">
+            <h1 class="text-3xl font-bold mb-4 text-gray-900">{{ book.title }}</h1>
+            
+            {% if book.author %}
+            <p class="text-xl text-gray-700 mb-4">by {{ book.author }}</p>
+            {% endif %}
+            
+            {% if book.averageRating and book.averageRating > 0 %}
+            <div class="flex items-center mb-4">
+                <span class="text-yellow-500 text-2xl">★</span>
+                <span class="text-lg text-gray-600 ml-2">{{ book.averageRating|floatformat:1 }} / 5.0</span>
+            </div>
+            {% endif %}
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                {% if book.publishedDate %}
+                <div>
+                    <p class="text-sm text-gray-500">Published Date</p>
+                    <p class="font-semibold">{{ book.publishedDate }}</p>
+                </div>
+                {% endif %}
+                
+                {% if book.pageCount %}
+                <div>
+                    <p class="text-sm text-gray-500">Page Count</p>
+                    <p class="font-semibold">{{ book.pageCount }} pages</p>
+                </div>
+                {% endif %}
+                
+                {% if book.isbn %}
+                <div>
+                    <p class="text-sm text-gray-500">ISBN</p>
+                    <p class="font-semibold">{{ book.isbn }}</p>
+                </div>
+                {% endif %}
+                
+                {% if book.genres %}
+                <div>
+                    <p class="text-sm text-gray-500">Genres</p>
+                    <p class="font-semibold">{{ book.genres|join:", " }}</p>
+                </div>
+                {% endif %}
+            </div>
+            
+            {% if book.description %}
+            <div class="mb-6">
+                <h2 class="text-xl font-bold mb-3 text-gray-900">Description</h2>
+                <div class="prose prose-gray max-w-none">
+                    <p class="text-gray-700 leading-relaxed">{{ book.description|linebreaks }}</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Action Buttons -->
+            <div class="flex gap-4 mt-8">
+                <button class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
+                    Start Reading
+                </button>
+                <button class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition duration-200">
+                    Add to Club
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Reading Progress Section (Future Enhancement) -->
+    <div class="mt-12 p-6 bg-gray-50 rounded-lg">
+        <h2 class="text-xl font-bold mb-4 text-gray-900">Reading Progress</h2>
+        <p class="text-gray-600">Reading progress tracking coming soon!</p>
+    </div>
+    
+    {% else %}
+    <div class="text-center py-12">
+        <p class="text-gray-500 mb-4">Book details not available.</p>
+        <a href="{% url 'books:catalog' %}" class="text-blue-600 hover:underline">
+            Return to catalog
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

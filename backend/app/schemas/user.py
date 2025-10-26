@@ -1,7 +1,7 @@
 """User-related Pydantic schemas."""
 
-from datetime import datetime
-from typing import Optional
+from datetime import datetime, date
+from typing import Optional, Literal
 from pydantic import BaseModel, EmailStr, Field, validator
 
 
@@ -9,10 +9,13 @@ class UserBase(BaseModel):
     """Base user schema with common fields."""
     
     email: EmailStr
+    username: str = Field(..., min_length=3, max_length=50)
     firstName: str = Field(..., min_length=1, max_length=100)
     lastName: str = Field(..., min_length=1, max_length=100)
     avatar: Optional[str] = None
     bio: Optional[str] = None
+    phone: Optional[str] = Field(None, max_length=20)
+    birthdate: Optional[date] = None
 
 
 class UserCreate(UserBase):
@@ -35,6 +38,8 @@ class UserUpdate(BaseModel):
     lastName: Optional[str] = Field(None, min_length=1, max_length=100)
     avatar: Optional[str] = None
     bio: Optional[str] = None
+    phone: Optional[str] = Field(None, max_length=20)
+    birthdate: Optional[date] = None
     REDACTED: Optional[str] = Field(None, min_length=8, max_length=100)
 
 
@@ -42,6 +47,7 @@ class UserResponse(UserBase):
     """Schema for user response (excludes REDACTED)."""
     
     id: int
+    authorization: Literal["LEITOR", "ADMIN", "MODERADOR", "ADMIN_SISTEMA"]
     isActive: bool
     createdAt: datetime
     updatedAt: datetime

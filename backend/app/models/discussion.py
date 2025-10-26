@@ -21,6 +21,7 @@ class Discussion(Base):
     # Foreign keys
     clubId = Column("club_id", Integer, ForeignKey("clubs.id"), nullable=False, index=True)
     userId = Column("user_id", Integer, ForeignKey("users.id"), nullable=False, index=True)
+    bookId = Column("book_id", String(12), ForeignKey("books.id"), nullable=False, index=True)
 
     # Optional parent discussion for nested comments/replies
     parentId = Column("parent_id", Integer, ForeignKey("discussions.id"), nullable=True, index=True)
@@ -36,6 +37,7 @@ class Discussion(Base):
     # Relationships
     club = relationship("Club", back_populates="discussions")
     user = relationship("User", back_populates="discussions")
+    book = relationship("Book", back_populates="discussions")
     
     # Self-referential relationship for nested comments
     parent = relationship("Discussion", remote_side=[id], backref="replies")

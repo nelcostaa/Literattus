@@ -3,44 +3,153 @@ Books views - handles book catalog, search, and details.
 Fetches data from FastAPI backend.
 """
 
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.views.decorators.http import require_http_methods
 import requests
 from django.conf import settings
+from loguru import logger
+
+
+def get_auth_headers(request):
+    """Get authorization headers from session."""
+    token = request.session.get('access_token')
+    if token:
+        return {'Authorization': f'Bearer {token}'}
+    return {}
 
 
 @login_required
-def book_list(request):
-    """Display list of books from catalog."""
-    # TODO: Fetch from FastAPI backend
-    # response = requests.get(f"{settings.FASTAPI_BACKEND_URL}/api/books/")
+def book_catalog(request):
+    """Display user's saved books from database."""
+    try:
+        # Fetch books from FastAPI backend
+        response = requests.get(
+            f"{settings.FASTAPI_BACKEND_URL}/api/books/",
+            headers=get_auth_headers(request),
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            books = response.json()
+        else:
+            logger.warning(f"Failed to fetch books: {response.status_code}")
+            books = []
+            messages.warning(request, 'Unable to load your book catalog')
+            
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error fetching books: {e}")
+        books = []
+        messages.error(request, 'Unable to connect to book service')
+    
     context = {
-        'title': 'Book Catalog',
+        'title': 'My Book Catalog',
+        'books': books
     }
-    return render(request, 'books/book_list.html', context)
-
-
-@login_required
-def book_detail(request, book_id):
-    """Display book details."""
-    # TODO: Fetch from FastAPI backend
-    # response = requests.get(f"{settings.FASTAPI_BACKEND_URL}/api/books/{book_id}")
-    context = {
-        'title': 'Book Details',
-        'book_id': book_id,
-    }
-    return render(request, 'books/book_detail.html', context)
+    return render(request, 'books/catalog.html', context)
 
 
 @login_required
 def book_search(request):
     """Search for books using Google Books API via backend."""
+    books = []
     query = request.GET.get('q', '')
-    # TODO: Implement search
-    # response = requests.get(f"{settings.FASTAPI_BACKEND_URL}/api/books/search?q={query}")
+    
+    if query:
+        try:
+            # Search via FastAPI backend
+            response = requests.get(
+                f"{settings.FASTAPI_BACKEND_URL}/api/books/search",
+                params={"q": query, "max_results": 20},
+                headers=get_auth_headers(request),
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                books = response.json()
+                if not books:
+                    messages.info(request, f'No books found for "{query}"')
+            else:
+                logger.warning(f"Search failed: {response.status_code}")
+                messages.warning(request, 'Search service temporarily unavailable')
+                
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Search error: {e}")
+            messages.error(request, 'Unable to search books at this time')
+    
     context = {
         'title': 'Search Books',
         'query': query,
+        'books': books
     }
-    return render(request, 'books/book_search.html', context)
+    return render(request, 'books/search.html', context)
 
+
+@login_required
+@require_http_methods(["POST"])
+def add_book(request, google_book_id):
+    """Add book from Google Books to user's catalog."""
+    try:
+        # Call FastAPI to save book
+        response = requests.post(
+            f"{settings.FASTAPI_BACKEND_URL}/api/books/search-and-save/{google_book_id}",
+            headers=get_auth_headers(request),
+            timeout=10
+        )
+        
+        if response.status_code in [200, 201]:
+            book_data = response.json()
+            messages.success(request, f'Added "{book_data.get("title")}" to your catalog!')
+            return redirect('books:catalog')
+        elif response.status_code == 404:
+            messages.error(request, 'Book not found')
+        else:
+            messages.error(request, 'Unable to add book to catalog')
+            
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error adding book {google_book_id}: {e}")
+        messages.error(request, 'Unable to connect to book service')
+    
+    # Redirect back to search on error
+    return redirect('books:search')
+
+
+@login_required
+def book_detail(request, book_id):
+    """Display detailed information about a book."""
+    book = None
+    
+    try:
+        # Fetch book details from FastAPI
+        response = requests.get(
+            f"{settings.FASTAPI_BACKEND_URL}/api/books/{book_id}",
+            headers=get_auth_headers(request),
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            book = response.json()
+        elif response.status_code == 404:
+            messages.error(request, 'Book not found')
+            return redirect('books:catalog')
+        else:
+            messages.warning(request, 'Unable to load book details')
+            
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error fetching book {book_id}: {e}")
+        messages.error(request, 'Unable to connect to book service')
+        return redirect('books:catalog')
+    
+    context = {
+        'title': book.get('title', 'Book Details') if book else 'Book Details',
+        'book': book
+    }
+    return render(request, 'books/detail.html', context)
+
+
+# Keep old views for backward compatibility (redirects)
+@login_required
+def book_list(request):
+    """Legacy redirect to catalog."""
+    return redirect('books:catalog')

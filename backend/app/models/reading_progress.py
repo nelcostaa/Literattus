@@ -25,7 +25,8 @@ class ReadingProgress(Base):
 
     # Foreign keys
     userId = Column("user_id", Integer, ForeignKey("users.id"), nullable=False, index=True)
-    bookId = Column("book_id", Integer, ForeignKey("books.id"), nullable=False, index=True)
+    bookId = Column("book_id", String(12), ForeignKey("books.id"), nullable=False, index=True)
+    clubId = Column("club_id", Integer, ForeignKey("clubs.id"), nullable=True, index=True)  # Optional: for club reading challenges
 
     # Progress tracking
     status = Column(String(50), default="not_started", nullable=False)  # not_started, reading, completed, abandoned
@@ -47,6 +48,7 @@ class ReadingProgress(Base):
     # Relationships
     user = relationship("User", back_populates="readingProgress")
     book = relationship("Book", back_populates="readingProgress")
+    club = relationship("Club", back_populates="readingProgress")
 
     def __repr__(self) -> str:
         return f"<ReadingProgress(id={self.id}, user_id={self.userId}, book_id={self.bookId}, status='{self.status}', progress={self.progressPercentage}%)>"

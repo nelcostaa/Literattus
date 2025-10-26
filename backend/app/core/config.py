@@ -26,15 +26,15 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     API_PREFIX: str = "/api"
 
-    # Database
-    DATABASE_URL: str = Field(
-        default="mysql+pymysql://root:REDACTED@localhost:3306/literattus"
-    )
+    # Database - individual components first
     DB_HOST: str = "localhost"
     DB_PORT: int = 3306
     DB_NAME: str = "literattus"
     DB_USER: str = "root"
     DB_PASSWORD: str = ""
+    
+    # Constructed from above or explicitly set
+    DATABASE_URL: Optional[str] = None
 
     # Security
     SECRET_KEY: str = Field(default_factory=lambda: secrets.token_urlsafe(32))
@@ -80,6 +80,23 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return [origin.strip() for origin in v.split(",")]
         return v
+    
+    @validator("DATABASE_URL", always=True)
+    def construct_database_url(cls, v, values):
+        """Construct DATABASE_URL from individual components."""
+        # Always construct from components to ensure correct REDACTED encoding
+        from urllib.parse import quote_plus
+        
+        db_host = values.get("DB_HOST", "localhost")
+        db_port = values.get("DB_PORT", 3306)
+        db_user = values.get("DB_USER", "root")
+        db_REDACTED = values.get("DB_PASSWORD", "")
+        db_name = values.get("DB_NAME", "literattus")
+        
+        # URL-encode REDACTED to handle special characters
+        REDACTED_encoded = quote_plus(db_REDACTED) if db_REDACTED else ""
+        
+        return f"mysql+pymysql://{db_user}:{REDACTED_encoded}@{db_host}:{db_port}/{db_name}"
 
     @property
     def database_url_async(self) -> str:

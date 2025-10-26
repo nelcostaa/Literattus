@@ -3,11 +3,20 @@ User model - migrated from TypeORM User entity.
 Represents application users with authentication and profile information.
 """
 
-from datetime import datetime
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime
+from datetime import datetime, date
+from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, Date, Enum
 from sqlalchemy.orm import relationship
+import enum
 
 from app.core.database import Base
+
+
+class UserAuthorization(str, enum.Enum):
+    """User authorization levels."""
+    LEITOR = "LEITOR"  # Standard reader
+    ADMIN = "ADMIN"  # Club administrator
+    MODERADOR = "MODERADOR"  # System moderator
+    ADMIN_SISTEMA = "ADMIN_SISTEMA"  # System administrator
 
 
 class User(Base):
@@ -20,6 +29,7 @@ class User(Base):
 
     # Authentication fields
     email = Column(String(255), unique=True, nullable=False, index=True)
+    username = Column(String(50), unique=True, nullable=False, index=True)
     REDACTED = Column(String(255), nullable=False)  # Hashed REDACTED
 
     # Profile fields
@@ -27,6 +37,11 @@ class User(Base):
     lastName = Column("last_name", String(100), nullable=False)
     avatar = Column(String(500), nullable=True)
     bio = Column(Text, nullable=True)
+    phone = Column(String(20), unique=True, nullable=True)
+    birthdate = Column(Date, nullable=True)
+
+    # Authorization level
+    authorization = Column(Enum(UserAuthorization), default=UserAuthorization.LEITOR, nullable=False)
 
     # Status
     isActive = Column("is_active", Boolean, default=True, nullable=False)

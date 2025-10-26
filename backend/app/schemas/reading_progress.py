@@ -19,7 +19,8 @@ class ReadingProgressCreate(BaseModel):
     """Schema for creating reading progress."""
     
     userId: int
-    bookId: int
+    bookId: str = Field(..., min_length=1, max_length=12, description="Google Books ID")
+    clubId: Optional[int] = None
     status: Literal["not_started", "reading", "completed", "abandoned"] = "not_started"
     currentPage: int = Field(default=0, ge=0)
 
@@ -39,7 +40,8 @@ class ReadingProgressResponse(ReadingProgressBase):
     
     id: int
     userId: int
-    bookId: int
+    bookId: str
+    clubId: Optional[int]
     startedAt: Optional[datetime]
     completedAt: Optional[datetime]
     createdAt: datetime
