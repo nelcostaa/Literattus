@@ -60,6 +60,7 @@ def test_user(db_session):
     
     user = User(
         email="test@example.com",
+        username="testuser",
         password=get_password_hash("testpassword123"),
         firstName="Test",
         lastName="User",

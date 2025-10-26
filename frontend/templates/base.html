@@ -34,12 +34,12 @@
                     </div>
                 </div>
                 <div class="hidden sm:ml-6 sm:flex sm:items-center">
-                    {% if user.is_authenticated %}
+                    {% if request.session.access_token %}
                         <a href="{% url 'users:profile' %}" class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Profile</a>
-                        <a href="{% url 'users:logout' %}" class="ml-3 text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Logout</a>
+                        <a href="{% url 'core:logout' %}" class="ml-3 text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Logout</a>
                     {% else %}
-                        <a href="{% url 'users:login' %}" class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Login</a>
-                        <a href="{% url 'users:register' %}" class="ml-3 bg-blue-600 text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium">Sign Up</a>
+                        <a href="{% url 'core:login' %}" class="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">Login</a>
+                        <a href="{% url 'core:register' %}" class="ml-3 bg-blue-600 text-white hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium">Sign Up</a>
                     {% endif %}
                 </div>
             </div>

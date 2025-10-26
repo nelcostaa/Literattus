@@ -4,12 +4,12 @@ Fetches data from FastAPI backend.
 """
 
 from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 import requests
 from django.conf import settings
 from loguru import logger
+from apps.core.decorators import jwt_login_required
 
 
 def get_auth_headers(request):
@@ -20,7 +20,7 @@ def get_auth_headers(request):
     return {}
 
 
-@login_required
+@jwt_login_required
 def book_catalog(request):
     """Display user's saved books from database."""
     try:
@@ -50,7 +50,7 @@ def book_catalog(request):
     return render(request, 'books/catalog.html', context)
 
 
-@login_required
+@jwt_login_required
 def book_search(request):
     """Search for books using Google Books API via backend."""
     books = []
@@ -67,9 +67,29 @@ def book_search(request):
             )
             
             if response.status_code == 200:
-                books = response.json()
+                data = response.json()
+                raw_books = data.get('results', [])
+                
+                # Transform Google Books API response for easier template access
+                books = []
+                for book in raw_books:
+                    vol_info = book.get('volumeInfo', {})
+                    image_links = vol_info.get('imageLinks', {})
+                    
+                    books.append({
+                        'id': book.get('id', ''),
+                        'title': vol_info.get('title', 'Untitled'),
+                        'authors': vol_info.get('authors', []),
+                        'published_date': vol_info.get('publishedDate', ''),
+                        'thumbnail': image_links.get('thumbnail', ''),
+                        'description': vol_info.get('description', '')
+                    })
+                
                 if not books:
                     messages.info(request, f'No books found for "{query}"')
+                else:
+                    logger.info(f"Search successful: {len(books)} books found")
+                    logger.debug(f"First book: {books[0] if books else 'None'}")
             else:
                 logger.warning(f"Search failed: {response.status_code}")
                 messages.warning(request, 'Search service temporarily unavailable')
@@ -77,16 +97,20 @@ def book_search(request):
         except requests.exceptions.RequestException as e:
             logger.error(f"Search error: {e}")
             messages.error(request, 'Unable to search books at this time')
+        except Exception as e:
+            logger.error(f"Unexpected error in search: {e}")
+            messages.error(request, 'An unexpected error occurred')
     
     context = {
         'title': 'Search Books',
         'query': query,
         'books': books
     }
+    logger.info(f"Rendering search template with {len(books)} books")
     return render(request, 'books/search.html', context)
 
 
-@login_required
+@jwt_login_required
 @require_http_methods(["POST"])
 def add_book(request, google_book_id):
     """Add book from Google Books to user's catalog."""
@@ -115,7 +139,7 @@ def add_book(request, google_book_id):
     return redirect('books:search')
 
 
-@login_required
+@jwt_login_required
 def book_detail(request, book_id):
     """Display detailed information about a book."""
     book = None
@@ -149,7 +173,7 @@ def book_detail(request, book_id):
 
 
 # Keep old views for backward compatibility (redirects)
-@login_required
+@jwt_login_required
 def book_list(request):
     """Legacy redirect to catalog."""
     return redirect('books:catalog')
