@@ -34,53 +34,40 @@
     </div>
     {% endif %}
     
-    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    {% if books %}
+    <div class="space-y-4">
         {% for book in books %}
-        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition duration-200">
-            {% if book.volumeInfo.imageLinks.thumbnail %}
-            <img src="{{ book.volumeInfo.imageLinks.thumbnail }}" 
-                 alt="{{ book.volumeInfo.title }}"
-                 class="w-full h-64 object-cover rounded mb-4">
-            {% else %}
-            <div class="w-full h-64 bg-gray-200 rounded mb-4 flex items-center justify-center">
-                <span class="text-gray-400">No cover available</span>
+        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition duration-200 flex items-start gap-4">
+            <div class="flex-1">
+                <h3 class="font-bold text-lg mb-2">{{ book.title }}</h3>
+                
+                {% if book.authors %}
+                <p class="text-gray-600 text-sm mb-2">by {{ book.authors|join:", " }}</p>
+                {% endif %}
+                
+                {% if book.published_date %}
+                <p class="text-gray-500 text-xs mb-3">Published: {{ book.published_date|slice:":4" }}</p>
+                {% endif %}
+                
+                <form method="post" action="{% url 'books:add' google_book_id=book.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                        Add to Catalog
+                    </button>
+                </form>
             </div>
-            {% endif %}
-            
-            <h3 class="font-bold text-lg mb-2 line-clamp-2">{{ book.volumeInfo.title }}</h3>
-            
-            {% if book.volumeInfo.authors %}
-            <p class="text-gray-600 text-sm mb-2 line-clamp-1">
-                {{ book.volumeInfo.authors|join:", " }}
-            </p>
-            {% endif %}
-            
-            {% if book.volumeInfo.publishedDate %}
-            <p class="text-gray-500 text-xs mb-3">
-                Published: {{ book.volumeInfo.publishedDate|slice:":4" }}
-            </p>
-            {% endif %}
-            
-            <form method="post" action="{% url 'books:add' book.id %}">
-                {% csrf_token %}
-                <button type="submit" 
-                        class="w-full text-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition duration-200">
-                    Add to Catalog
-                </button>
-            </form>
         </div>
-        {% empty %}
-        {% if query %}
-        <div class="col-span-full text-center py-12">
-            <p class="text-gray-500 mb-4">No books found matching your search.</p>
-            <p class="text-gray-400">Try different keywords or check your spelling.</p>
-        </div>
-        {% else %}
-        <div class="col-span-full text-center py-12">
-            <p class="text-gray-500">Enter a search term to find books.</p>
-        </div>
-        {% endif %}
         {% endfor %}
     </div>
+    {% elif query %}
+    <div class="text-center py-12">
+        <p class="text-gray-500 mb-4">No books found matching your search.</p>
+        <p class="text-gray-400">Try different keywords or check your spelling.</p>
+    </div>
+    {% else %}
+    <div class="text-center py-12">
+        <p class="text-gray-500">Enter a search term to find books.</p>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

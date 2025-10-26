@@ -14,7 +14,7 @@ from loguru import logger
 
 # Load environment variables from project root
 project_root = Path(__file__).parent.parent
-load_dotenv(project_root / 'env.local')
+load_dotenv(project_root / '.env')
 
 def get_db_connection(use_root=False):
     """Get MySQL database connection."""

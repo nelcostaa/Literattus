@@ -49,6 +49,7 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
     hashed_REDACTED = get_REDACTED_hash(user_data.REDACTED)
     new_user = User(
         email=user_data.email,
+        username=user_data.username,
         REDACTED=hashed_REDACTED,
         firstName=user_data.firstName,
         lastName=user_data.lastName,

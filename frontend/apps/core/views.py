@@ -4,12 +4,12 @@ Handles home page, dashboard, and main application pages.
 """
 
 from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 import requests
 from django.conf import settings
 from loguru import logger
+from .decorators import jwt_login_required
 
 
 def home(request):
@@ -19,20 +19,20 @@ def home(request):
     })
 
 
-@login_required
+@jwt_login_required
 def dashboard(request):
     """
     Dashboard view - shows user's reading progress, clubs, and recommendations.
     Fetches data from FastAPI backend.
     """
-    # TODO: Fetch data from FastAPI backend
-    # Example:
-    # response = requests.get(f"{settings.FASTAPI_BACKEND_URL}/api/users/me")
-    # user_data = response.json()
+    # Get user data from session (already loaded during login)
+    user_name = request.session.get('user_name', 'User')
+    user_email = request.session.get('user_email', '')
     
     context = {
         'title': 'Dashboard',
-        # Add fetched data here
+        'user_name': user_name,
+        'user_email': user_email,
     }
     return render(request, 'main/dashboard.html', context)
 
@@ -68,17 +68,39 @@ def login_view(request):
             
             if response.status_code == 200:
                 data = response.json()
-                # Store token and user info in session
-                request.session['access_token'] = data['access_token']
-                request.session['user_id'] = data['user']['id']
-                request.session['user_email'] = data['user']['email']
-                request.session['user_name'] = f"{data['user']['firstName']} {data['user']['lastName']}"
+                access_token = data['access_token']
                 
-                messages.success(request, 'Successfully logged in!')
-                
-                # Redirect to next page or dashboard
-                next_url = request.GET.get('next', 'dashboard')
-                return redirect(next_url)
+                # Fetch user data using the access token
+                try:
+                    user_response = requests.get(
+                        f"{settings.FASTAPI_BACKEND_URL}/api/auth/me",
+                        headers={'Authorization': f'Bearer {access_token}'},
+                        timeout=10
+                    )
+                    
+                    if user_response.status_code == 200:
+                        user_data = user_response.json()
+                        
+                        # Store token and user info in session
+                        request.session['access_token'] = access_token
+                        request.session['refresh_token'] = data.get('refresh_token')
+                        request.session['user_id'] = user_data['id']
+                        request.session['user_email'] = user_data['email']
+                        request.session['user_name'] = f"{user_data['firstName']} {user_data['lastName']}"
+                        request.session['username'] = user_data.get('username', '')
+                        
+                        messages.success(request, f'Welcome back, {user_data["firstName"]}!')
+                        
+                        # Redirect to next page or dashboard
+                        next_url = request.GET.get('next', 'core:dashboard')
+                        return redirect(next_url)
+                    else:
+                        logger.error(f"Failed to fetch user data: {user_response.status_code}")
+                        messages.error(request, 'Login failed: Unable to fetch user data')
+                        
+                except requests.exceptions.RequestException as e:
+                    logger.error(f"Error fetching user data: {e}")
+                    messages.error(request, 'Login failed: Unable to fetch user data')
             else:
                 error_msg = 'Invalid email or REDACTED'
                 if response.status_code == 422:
@@ -142,7 +164,7 @@ def register_view(request):
             
             if response.status_code in [200, 201]:
                 messages.success(request, 'Registration successful! Please login.')
-                return redirect('login')
+                return redirect('core:login')
             elif response.status_code == 400:
                 error_data = response.json()
                 error_msg = error_data.get('detail', 'Registration failed')
@@ -167,5 +189,5 @@ def logout_view(request):
     # Clear session data
     request.session.flush()
     messages.success(request, 'Successfully logged out')
-    return redirect('home')
+    return redirect('core:home')
 

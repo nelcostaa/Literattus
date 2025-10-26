@@ -51,12 +51,17 @@ The project is Literattus, a full-stack Software as a Service (SaaS) platform de
 - **Pattern:** `requests.get(f"{settings.FASTAPI_BACKEND_URL}/api/books/")`
 - **Docker Communication:** In Docker, use service name `http://backend:8000`, not `localhost`
 - **Error Handling:** Always handle API errors gracefully with try/except blocks
+- **JWT Token Handling:** Store tokens in Django session (`request.session['access_token']`)
+- **Auth Headers Helper:** Create reusable function to extract `Authorization: Bearer {token}` from session
+- **Session Storage:** Store minimal user data in session (id, email, name) for template access
 
 ### **Template Conventions**
 - **Base Template:** `templates/base.html` contains navigation, footer, and common structure
 - **Inheritance:** All page templates extend `base.html`
 - **Styling:** Use Tailwind CSS utility classes directly in templates
 - **Context:** Pass minimal context from views; fetch most data via API
+- **URL References:** Use Django URL namespacing (`{% url 'app:view' %}`) - never hardcode paths
+- **URL Consistency Check:** When changing URL patterns or app names, grep all templates for old references
 
 ---
 
@@ -129,7 +134,37 @@ The project is Literattus, a full-stack Software as a Service (SaaS) platform de
 - **DB Access:** Scripts can use `mysql-connector-python` or SQLAlchemy
 - **Environment Variables:** Use `python-dotenv` to load credentials from `.env`
 
-## 7. Good General Practices
+---
+
+## 8. Django Deployment & Testing Patterns
+
+### **Dependency Installation**
+- **Package Name Verification:** Check PyPI for exact package names before `pip install`
+  - Common mistakes: `crispy-forms` (wrong) vs `django-crispy-forms` (correct)
+  - Use `pip search` or check documentation to verify exact package names
+- **Install Order:** Install all dependencies before running Django checks or migrations
+- **Missing Imports:** If Django fails to import a module, check `requirements.txt` for the package
+
+### **Service Startup Verification**
+- **Three-Step Verification:**
+  1. Start service (e.g., `python manage.py runserver`)
+  2. Wait 2-3 seconds for initialization
+  3. Test endpoint with `curl` and check logs
+- **Log Inspection:** If service doesn't respond, immediately check logs (stdout/stderr or log file)
+- **Bind Address:** For Docker/network access, use `0.0.0.0:PORT` not `localhost:PORT`
+
+### **Incremental Testing**
+- **Layer-by-Layer:** Test each layer before proceeding to the next
+  1. `python manage.py check` - validate configuration
+  2. `python manage.py migrate` - apply database migrations
+  3. Start server - verify process running
+  4. Test health endpoint - verify HTTP responding
+  5. Test actual pages - verify application logic
+- **Fail Fast:** Stop at first failure, fix it, then continue forward
+
+---
+
+## 9. Good General Practices
 
 ## 🎯 IDENTITY: YOU ARE THE SOVEREIGN ARCHITECT
 
@@ -188,6 +223,11 @@ You will follow this structured workflow for every task:
     -   Reread to verify changes applied correctly
     -   **Critical:** If editing same file multiple times in a session, re-read before each subsequent edit to avoid stale content
 -   **Scope Boundary Discipline:** When user specifies component scope (e.g., "frontend only", "backend only"), verify EVERY file modification is within that scope before proceeding. Never "helpfully" modify adjacent systems.
+-   **Verify Before Creating:** Before implementing a feature, check if related infrastructure already exists:
+    -   Backend API endpoints may already be implemented
+    -   Database schemas may already be deployed
+    -   Services may already be running
+    -   Use `grep`, `codebase_search`, and service health checks to verify
 -   Enumerate all relevant artifacts and inspect the runtime substrate.
 -   **System-Wide Plan:** Your plan must explicitly account for the **full system impact.** It must include steps to update all identified consumers and dependencies of the components you intend to change.
 

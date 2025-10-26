@@ -54,7 +54,7 @@ def connect_to_database():
             print(f"✅ Connected to AWS RDS MySQL Server version {db_info}")
             return connection
     except Error as e:
-        print(f"❌ Error connecting to AWS RDS: {e}")
+        print(f"❌ Error con1necting to AWS RDS: {e}")
         return None
 
 def test_connection():

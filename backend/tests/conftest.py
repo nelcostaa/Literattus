@@ -60,6 +60,7 @@ def test_user(db_session):
     
     user = User(
         email="test@example.com",
+        username="testuser",
         REDACTED=get_REDACTED_hash("testREDACTED123"),
         firstName="Test",
         lastName="User",

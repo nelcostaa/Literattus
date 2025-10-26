@@ -6,6 +6,7 @@ Handles book catalog management and Google Books integration.
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
+from loguru import logger
 
 from app.core.database import get_db
 from app.core.security import get_current_user
@@ -214,10 +215,6 @@ async def update_book(
         book.publishedDate = book_data.publishedDate
     if book_data.pageCount is not None:
         book.pageCount = book_data.pageCount
-    if book_data.genres is not None:
-        book.genres = ",".join(book_data.genres)
-    if book_data.averageRating is not None:
-        book.averageRating = book_data.averageRating
     
     db.commit()
     db.refresh(book)

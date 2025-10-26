@@ -8,11 +8,10 @@ import pytest
 def test_create_book(client, auth_headers):
     """Test creating a book."""
     response = client.post("/api/books/", headers=auth_headers, json={
-        "googleBooksId": "test123",
+        "id": "test123",
         "title": "Test Book",
         "author": "Test Author",
-        "pageCount": 300,
-        "averageRating": 4.5
+        "pageCount": 300
     })
     
     assert response.status_code == 201
@@ -25,7 +24,7 @@ def test_get_books(client, auth_headers):
     """Test getting list of books."""
     # Create a book first
     client.post("/api/books/", headers=auth_headers, json={
-        "googleBooksId": "test456",
+        "id": "test456",
         "title": "Another Book",
         "author": "Another Author"
     })
@@ -42,7 +41,7 @@ def test_get_book_by_id(client, auth_headers):
     """Test getting a specific book."""
     # Create a book
     create_response = client.post("/api/books/", headers=auth_headers, json={
-        "googleBooksId": "test789",
+        "id": "test789",
         "title": "Specific Book",
         "author": "Specific Author"
     })
@@ -61,7 +60,7 @@ def test_update_book(client, auth_headers):
     """Test updating a book."""
     # Create a book
     create_response = client.post("/api/books/", headers=auth_headers, json={
-        "googleBooksId": "update123",
+        "id": "update123",
         "title": "Original Title",
         "author": "Original Author"
     })
@@ -83,7 +82,7 @@ def test_delete_book(client, auth_headers):
     """Test deleting a book."""
     # Create a book
     create_response = client.post("/api/books/", headers=auth_headers, json={
-        "googleBooksId": "delete123",
+        "id": "delete123",
         "title": "To Delete",
         "author": "Delete Author"
     })

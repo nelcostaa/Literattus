@@ -11,17 +11,17 @@ urlpatterns = [
     # Admin
     path('admin/', admin.site.urls),
     
-    # Core app (home, landing)
+    # Core app (home, landing, authentication)
     path('', include('apps.core.urls')),
-    
-    # Authentication
-    path('auth/', include('apps.users.urls')),
     
     # Books
     path('books/', include('apps.books.urls')),
     
     # Clubs
     path('clubs/', include('apps.clubs.urls')),
+    
+    # Users (profile and settings) - auth is handled by core
+    path('user/', include('apps.users.urls')),
 ]
 
 # Serve media files in development

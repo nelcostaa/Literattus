@@ -9,6 +9,7 @@ def test_register_user(client):
     """Test user registration."""
     response = client.post("/api/auth/register", json={
         "email": "newuser@example.com",
+        "username": "newuser",
         "REDACTED": "secureREDACTED123",
         "firstName": "New",
         "lastName": "User"
@@ -26,6 +27,7 @@ def test_register_duplicate_email(client, test_user):
     """Test registration with existing email."""
     response = client.post("/api/auth/register", json={
         "email": "test@example.com",  # Already exists
+        "username": "duplicate",
         "REDACTED": "REDACTED123",
         "firstName": "Duplicate",
         "lastName": "User"

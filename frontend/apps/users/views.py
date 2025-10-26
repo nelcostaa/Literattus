@@ -1,51 +1,29 @@
 """
-Users views - handles authentication and user profiles.
-Communicates with FastAPI backend for authentication.
+Users views - handles user profiles.
+Authentication is handled by core app.
 """
 
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, logout
-from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 import requests
 from django.conf import settings
+from apps.core.decorators import jwt_login_required
 
 
-def login_view(request):
-    """User login page."""
-    if request.method == 'POST':
-        # TODO: Authenticate via FastAPI backend
-        # response = requests.post(f"{settings.FASTAPI_BACKEND_URL}/api/auth/login", ...)
-        pass
-    
-    return render(request, 'auth/login.html', {
-        'title': 'Login'
-    })
-
-
-def register_view(request):
-    """User registration page."""
-    if request.method == 'POST':
-        # TODO: Register via FastAPI backend
-        # response = requests.post(f"{settings.FASTAPI_BACKEND_URL}/api/auth/register", ...)
-        pass
-    
-    return render(request, 'auth/register.html', {
-        'title': 'Register'
-    })
-
-
-def logout_view(request):
-    """User logout."""
-    logout(request)
-    return redirect('core:home')
-
-
-@login_required
+@jwt_login_required
 def profile(request):
-    """User profile page."""
-    # TODO: Fetch from FastAPI backend
+    """User profile page - displays user information from session."""
+    user_name = request.session.get('user_name', 'User')
+    user_email = request.session.get('user_email', '')
+    username = request.session.get('username', '')
+    user_id = request.session.get('user_id', '')
+    
     context = {
         'title': 'My Profile',
+        'user_name': user_name,
+        'user_email': user_email,
+        'username': username,
+        'user_id': user_id,
     }
     return render(request, 'auth/profile.html', context)
 
