@@ -30,7 +30,7 @@ email-validator>=2.1.0
 orjson>=3.9.0
 
 # CORS & Middleware
-python-cors>=1.0.0
+# FastAPI has built-in CORS support via fastapi.middleware.cors
 
 # Logging & Monitoring
 loguru>=0.7.2
@@ -55,7 +55,7 @@ pandas>=2.1.0
 numpy>=1.24.0
 
 # Async Support
-asyncio>=3.4.3
+# asyncio is a built-in Python module (Python 3.4+)
 
 # CLI Tools
 click>=8.1.0

@@ -56,7 +56,7 @@ async def startup_event():
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
     logger.info(f"Environment: {settings.APP_ENV}")
     logger.info(f"Debug mode: {settings.DEBUG}")
-    
+     
     try:
         init_db()
         logger.success("Database initialized successfully")
