@@ -92,8 +92,11 @@ def login_view(request):
                         messages.success(request, f'Welcome back, {user_data["firstName"]}!')
                         
                         # Redirect to next page or dashboard
-                        next_url = request.GET.get('next', 'core:dashboard')
-                        return redirect(next_url)
+                        next_url = request.GET.get('next', '/dashboard/')
+                        if next_url.startswith('/'):
+                            return redirect(next_url)
+                        else:
+                            return redirect('core:dashboard')
                     else:
                         logger.error(f"Failed to fetch user data: {user_response.status_code}")
                         messages.error(request, 'Login failed: Unable to fetch user data')

@@ -2,6 +2,7 @@
 """
 Enhanced database setup and testing utility for Literattus.
 This script helps with initial database setup, schema creation, and testing.
+Connects to AWS RDS database using credentials from backend/.env
 """
 
 import os
@@ -12,29 +13,41 @@ import mysql.connector
 from mysql.connector import Error
 from loguru import logger
 
-# Load environment variables from project root
+# Load environment variables from backend/.env
 project_root = Path(__file__).parent.parent
-load_dotenv(project_root / '.env')
+backend_env = project_root / 'backend' / '.env'
+if not backend_env.exists():
+    logger.error(f"Backend .env file not found at: {backend_env}")
+    sys.exit(1)
+load_dotenv(backend_env)
+logger.info(f"Loaded configuration from: {backend_env}")
 
 def get_db_connection(use_root=False):
-    """Get MySQL database connection."""
+    """Get MySQL database connection to AWS RDS."""
+    # Validate required environment variables
+    required_vars = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD']
+    missing_vars = [var for var in required_vars if not os.getenv(var)]
+    if missing_vars:
+        logger.error(f"Missing required environment variables: {', '.join(missing_vars)}")
+        return None
+    
     try:
         if use_root:
-            # Use root connection for admin operations
+            # Use admin/root connection for AWS RDS admin operations
             connection = mysql.connector.connect(
-                host=os.getenv('DB_HOST', 'localhost'),
+                host=os.getenv('DB_HOST'),
                 port=int(os.getenv('DB_PORT', '3306')),
-                user='root',
-                REDACTED=os.getenv('MYSQL_ROOT_PASSWORD', 'rootREDACTED')
+                user=os.getenv('DB_USER'),  # AWS RDS admin user
+                REDACTED=os.getenv('DB_PASSWORD')
             )
         else:
             # Use regular user connection
             connection = mysql.connector.connect(
-                host=os.getenv('DB_HOST', 'localhost'),
+                host=os.getenv('DB_HOST'),
                 port=int(os.getenv('DB_PORT', '3306')),
-                database=os.getenv('DB_NAME', 'literattus'),
-                user=os.getenv('DB_USER', 'literattus_user'),
-                REDACTED=os.getenv('DB_PASSWORD', 'REDACTED')
+                database=os.getenv('DB_NAME'),
+                user=os.getenv('DB_USER'),
+                REDACTED=os.getenv('DB_PASSWORD')
             )
         
         logger.info(f"Database connection established ({'root' if use_root else 'user'})")
@@ -44,27 +57,24 @@ def get_db_connection(use_root=False):
         return None
 
 def create_database():
-    """Create the literattus database if it doesn't exist."""
+    """Create the literattus database if it doesn't exist on AWS RDS."""
+    logger.warning("Note: On AWS RDS, database creation typically requires master/admin privileges")
     connection = get_db_connection(use_root=True)
     if not connection:
-        logger.error("Cannot create database without root connection")
+        logger.error("Cannot create database without admin connection")
         return False
     
     try:
         cursor = connection.cursor()
+        db_name = os.getenv('DB_NAME')
         
         # Create database
-        cursor.execute(f"CREATE DATABASE IF NOT EXISTS {os.getenv('DB_NAME', 'literattus')} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
-        logger.success(f"Database '{os.getenv('DB_NAME', 'literattus')}' created/verified")
+        cursor.execute(f"CREATE DATABASE IF NOT EXISTS {db_name} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
+        logger.success(f"Database '{db_name}' created/verified on AWS RDS")
         
-        # Create user if it doesn't exist
-        user = os.getenv('DB_USER', 'literattus_user')
-        REDACTED = os.getenv('DB_PASSWORD', 'REDACTED')
-        
-        cursor.execute(f"CREATE USER IF NOT EXISTS '{user}'@'%' IDENTIFIED BY '{REDACTED}'")
-        cursor.execute(f"GRANT ALL PRIVILEGES ON {os.getenv('DB_NAME', 'literattus')}.* TO '{user}'@'%'")
-        cursor.execute("FLUSH PRIVILEGES")
-        logger.success(f"User '{user}' created/verified with privileges")
+        # Note: AWS RDS user creation is typically done via RDS console or AWS CLI
+        # This script assumes the user already exists
+        logger.info("AWS RDS user management should be done via AWS Console or CLI")
         
         cursor.close()
         return True

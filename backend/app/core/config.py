@@ -26,12 +26,14 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     API_PREFIX: str = "/api"
 
-    # Database - individual components first
-    DB_HOST: str = "localhost"
+    # Database - AWS RDS configuration
+    # IMPORTANT: DB_HOST, DB_USER, and DB_PASSWORD must be set in .env file
+    # No defaults provided for security - will fail if not configured
+    DB_HOST: str  # AWS RDS endpoint - REQUIRED in .env
     DB_PORT: int = 3306
     DB_NAME: str = "literattus"
-    DB_USER: str = "root"
-    DB_PASSWORD: str = ""
+    DB_USER: str  # Database user - REQUIRED in .env
+    DB_PASSWORD: str  # Database REDACTED - REQUIRED in .env
     
     # Constructed from above or explicitly set
     DATABASE_URL: Optional[str] = None

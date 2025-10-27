@@ -1,42 +1,20 @@
 version: '3.8'
 
 services:
-  # MySQL Database
-  db:
-    image: mysql:8.0
-    environment:
-      - MYSQL_ROOT_PASSWORD=rootREDACTED
-      - MYSQL_DATABASE=literattus
-      - MYSQL_USER=literattus_user
-      - MYSQL_PASSWORD=REDACTED
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-    networks:
-      - literattus-network
-    command: --default-authentication-plugin=mysql_native_REDACTED
-
   # FastAPI Backend
   backend:
     build: ./backend
     ports:
       - "8000:8000"
+    env_file:
+      - ./backend/.env
     environment:
-      - DATABASE_URL=mysql+pymysql://literattus_user:REDACTED@db:3306/literattus
-      - DB_HOST=db
-      - DB_PORT=3306
-      - DB_NAME=literattus
-      - DB_USER=literattus_user
-      - DB_PASSWORD=REDACTED
-      - SECRET_KEY=dev-secret-key-change-in-production
+      # Override specific settings for Docker environment
       - APP_ENV=development
       - DEBUG=True
       - CORS_ORIGINS=["http://localhost:8080"]
     volumes:
       - ./backend:/app
-    depends_on:
-      - db
     networks:
       - literattus-network
     command: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
@@ -62,7 +40,4 @@ services:
 networks:
   literattus-network:
     driver: bridge
-
-volumes:
-  mysql_data:
 
