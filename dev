@@ -1,0 +1,53 @@
+#!/bin/bash
+# Literattus development helper
+# Quick access to common commands
+
+SCRIPT_DIR="$(cd "$(dirname "$0")/scripts" && pwd)"
+
+show_help() {
+    echo "Literattus Development Helper"
+    echo ""
+    echo "Usage: ./dev <command> [options]"
+    echo ""
+    echo "Commands:"
+    echo "  start [--force]   Start services"
+    echo "  stop              Stop services"
+    echo "  restart           Restart services (stop + start)"
+    echo "  status            Show service status"
+    echo "  logs [service]    View logs"
+    echo "  help              Show this help"
+    echo ""
+    echo "Examples:"
+    echo "  ./dev start"
+    echo "  ./dev start --force"
+    echo "  ./dev logs backend"
+    echo ""
+}
+
+case "$1" in
+    start)
+        "$SCRIPT_DIR/start" "${@:2}"
+        ;;
+    stop)
+        "$SCRIPT_DIR/stop"
+        ;;
+    restart)
+        "$SCRIPT_DIR/stop" && "$SCRIPT_DIR/start" "${@:2}"
+        ;;
+    status)
+        "$SCRIPT_DIR/status"
+        ;;
+    logs)
+        "$SCRIPT_DIR/logs" "${@:2}"
+        ;;
+    help|--help|-h|"")
+        show_help
+        ;;
+    *)
+        echo "❌ Unknown command: $1"
+        echo ""
+        show_help
+        exit 1
+        ;;
+esac
+
