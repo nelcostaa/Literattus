@@ -1,45 +1,118 @@
-# Literattus Python Scripts
+# Literattus Management Scripts
 
-This directory contains Python utility scripts for the Literattus project.
+Simple scripts to manage your Literattus development environment.
 
-## Setup
-
-1. Create a Python virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-3. Ensure environment variables are set in the project root `.env` file.
-
-## Scripts
-
-### `db_setup.py`
-Database setup and migration utility.
+## Quick Start
 
 ```bash
-python scripts/db_setup.py
+# After booting your PC
+./scripts/start
+
+# To stop
+./scripts/stop
+
+# Check status
+./scripts/status
+
+# View logs
+./scripts/logs
 ```
 
-### `google_books_sync.py`
-Synchronize book data from Google Books API.
+## Available Commands
 
+### `./scripts/start [--force]`
+Start all Literattus services (frontend, backend).
+
+**Options:**
+- `--force` - Clean up ports and force restart if services are stuck
+
+**Examples:**
 ```bash
-python scripts/google_books_sync.py
+./scripts/start              # Normal start
+./scripts/start --force      # Force start (cleans up stuck processes)
 ```
 
-## Environment Variables
+### `./scripts/stop`
+Stop all Literattus services cleanly.
 
-Make sure these variables are set in your `.env` file:
+### `./scripts/status`
+Show current status of all services.
 
-- `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`
-- `GOOGLE_BOOKS_API_KEY`
+### `./scripts/logs [service]`
+View service logs in real-time.
 
-## MySQL Database Setup
+**Examples:**
+```bash
+./scripts/logs              # All services
+./scripts/logs frontend     # Frontend only
+./scripts/logs backend      # Backend only
+```
 
-Ensure you have MySQL server installed and running. The `mysql-connector-python` package will handle the database connectivity.
+## Common Workflows
+
+### After Booting Your PC
+```bash
+cd /home/nelso/Documents/Literattus
+./scripts/start
+```
+
+### Making CSS Changes
+1. Edit `frontend/static/css/main.css`
+2. Save the file
+3. Refresh your browser (`Ctrl+R`)
+4. Changes appear immediately (hot reload)
+
+### If Port is Already in Use
+```bash
+./scripts/start --force
+```
+
+This will:
+- Stop all containers
+- Kill processes on ports 8000 and 8080
+- Start fresh
+
+### Debugging Issues
+```bash
+# Check what's running
+./scripts/status
+
+# View logs
+./scripts/logs
+
+# View specific service logs
+./scripts/logs backend
+./scripts/logs frontend
+```
+
+## Access Points
+
+Once started:
+- **Frontend**: http://localhost:8080
+- **Backend API**: http://localhost:8000/api/docs
+
+## Troubleshooting
+
+### Services won't start
+```bash
+./scripts/start --force
+```
+
+### Can't see latest CSS changes
+1. Hard refresh: `Ctrl+Shift+R`
+2. If that doesn't work:
+   ```bash
+   ./scripts/stop
+   ./scripts/start
+   ```
+
+### Check if Docker is running
+```bash
+sudo systemctl status docker
+```
+
+### Services are slow
+```bash
+# Check logs for errors
+./scripts/logs
+```
