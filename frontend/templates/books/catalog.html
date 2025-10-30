@@ -1,75 +1,123 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">My Book Catalog</h1>
-        <a href="{% url 'books:search' %}" 
-           class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
-            + Add Books
-        </a>
+<!-- Header with CTA -->
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 animate-fade-in gap-4">
+    <div>
+        <h1 class="text-4xl font-bold text-gray-900 mb-2">📖 My Book Catalog</h1>
+        <p class="text-lg text-gray-600">
+            {% if books %}
+                You have <span class="font-semibold text-blue-600">{{ books|length }}</span> book{{ books|length|pluralize }} in your library
+            {% else %}
+                Your library is waiting for great books
+            {% endif %}
+        </p>
     </div>
-    
-    {% if books %}
-    <div class="mb-4">
-        <p class="text-gray-600">You have {{ books|length }} book{{ books|length|pluralize }} in your catalog</p>
-    </div>
-    {% endif %}
-    
-    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {% for book in books %}
-        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition duration-200">
-            <a href="{% url 'books:detail' book.id %}">
-                {% if book.coverImage %}
+    <a href="{% url 'books:search' %}" 
+       class="btn-primary px-6 py-3 rounded-lg font-semibold inline-flex items-center gap-2 whitespace-nowrap justify-center">
+        <i class="fas fa-plus-circle"></i> Add Books
+    </a>
+</div>
+
+<!-- Books Grid -->
+{% if books %}
+<div class="book-grid animate-fade-in">
+    {% for book in books %}
+    <a href="{% url 'books:detail' book.id %}" class="book-card group">
+        <!-- Book Cover -->
+        <div class="book-cover relative overflow-hidden bg-gradient-to-br from-blue-100 to-cyan-100">
+            {% if book.coverImage %}
                 <img src="{{ book.coverImage }}" 
                      alt="{{ book.title }}"
-                     class="w-full h-64 object-cover rounded mb-4">
-                {% else %}
-                <div class="w-full h-64 bg-gray-200 rounded mb-4 flex items-center justify-center">
-                    <span class="text-gray-400">No cover available</span>
+                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
+            {% else %}
+                <div class="w-full h-full flex flex-col items-center justify-center text-center p-4 bg-gradient-to-br from-gray-200 to-gray-300">
+                    <i class="fas fa-book text-5xl text-gray-400 mb-2"></i>
+                    <span class="text-xs text-gray-600 font-semibold">{{ book.title|truncatewords:2 }}</span>
                 </div>
-                {% endif %}
-                
-                <h3 class="font-bold text-lg mb-2 line-clamp-2 hover:text-blue-600">{{ book.title }}</h3>
-            </a>
-            
-            {% if book.author %}
-            <p class="text-gray-600 text-sm mb-2 line-clamp-1">{{ book.author }}</p>
             {% endif %}
             
-            <div class="flex justify-between items-center text-xs text-gray-500">
+            <!-- Hover Overlay -->
+            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                <div class="text-center">
+                    <i class="fas fa-eye text-white text-3xl mb-2"></i>
+                    <p class="text-white font-semibold text-sm">View Details</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Book Info -->
+        <div class="book-info">
+            <h3 class="book-title group-hover:text-blue-600 transition-colors">{{ book.title }}</h3>
+            <p class="book-author">{{ book.author|default:"Unknown Author" }}</p>
+            
+            <div class="mt-3 pt-3 border-t border-gray-200 flex items-center justify-between text-xs text-gray-500">
                 {% if book.pageCount %}
-                <span>{{ book.pageCount }} pages</span>
+                    <span><i class="fas fa-file-lines mr-1"></i> {{ book.pageCount }} pages</span>
                 {% endif %}
                 {% if book.publishedDate %}
-                <span>{{ book.publishedDate|slice:":4" }}</span>
+                    <span><i class="fas fa-calendar mr-1"></i> {{ book.publishedDate|slice:":4" }}</span>
                 {% endif %}
             </div>
             
             {% if book.averageRating and book.averageRating > 0 %}
-            <div class="mt-2">
-                <div class="flex items-center">
-                    <span class="text-yellow-500">★</span>
-                    <span class="text-sm text-gray-600 ml-1">{{ book.averageRating|floatformat:1 }}</span>
+            <div class="mt-3 flex items-center">
+                <div class="flex text-yellow-400">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= book.averageRating %}
+                            <i class="fas fa-star"></i>
+                        {% elif forloop.counter - book.averageRating < 1 %}
+                            <i class="fas fa-star-half-alt"></i>
+                        {% else %}
+                            <i class="far fa-star"></i>
+                        {% endif %}
+                    {% endfor %}
                 </div>
+                <span class="text-xs text-gray-600 ml-2">{{ book.averageRating|floatformat:1 }}</span>
             </div>
             {% endif %}
         </div>
-        {% empty %}
-        <div class="col-span-full text-center py-12">
-            <div class="mb-4">
-                <svg class="mx-auto h-24 w-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
-                    </path>
-                </svg>
-            </div>
-            <p class="text-gray-500 mb-4">Your book catalog is empty.</p>
-            <a href="{% url 'books:search' %}" class="text-blue-600 hover:underline">
-                Search for books to add to your catalog →
-            </a>
+    </a>
+    {% endfor %}
+</div>
+
+<!-- Empty State -->
+{% else %}
+<div class="card p-12 text-center animate-slide-up">
+    <div class="mb-6">
+        <div class="w-24 h-24 mx-auto bg-gradient-to-br from-blue-100 to-cyan-100 rounded-full flex items-center justify-center">
+            <i class="fas fa-books text-5xl text-blue-400"></i>
         </div>
-        {% endfor %}
+    </div>
+    <h2 class="text-3xl font-bold text-gray-900 mb-3">Your library is empty</h2>
+    <p class="text-gray-600 mb-8 max-w-md mx-auto">
+        Start building your personal collection of books. Search from millions of titles and track your reading journey!
+    </p>
+    <a href="{% url 'books:search' %}" class="btn-primary px-8 py-3 rounded-lg font-semibold inline-flex items-center gap-2">
+        <i class="fas fa-search"></i> Search for Books
+    </a>
+</div>
+{% endif %}
+
+<!-- Stats Footer (if has books) -->
+{% if books %}
+<div class="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="card p-4 text-center">
+        <div class="text-2xl font-bold text-blue-600">{{ books|length }}</div>
+        <p class="text-xs text-gray-600 mt-1">Total Books</p>
+    </div>
+    <div class="card p-4 text-center">
+        <div class="text-2xl font-bold text-orange-500">3</div>
+        <p class="text-xs text-gray-600 mt-1">Currently Reading</p>
+    </div>
+    <div class="card p-4 text-center">
+        <div class="text-2xl font-bold text-cyan-500">5</div>
+        <p class="text-xs text-gray-600 mt-1">Want to Read</p>
+    </div>
+    <div class="card p-4 text-center">
+        <div class="text-2xl font-bold text-green-500">{{ books|length }}</div>
+        <p class="text-xs text-gray-600 mt-1">Read</p>
     </div>
 </div>
+{% endif %}
 {% endblock %}
