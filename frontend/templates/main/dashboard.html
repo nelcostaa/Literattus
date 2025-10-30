@@ -1,33 +1,166 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1 class="text-3xl font-bold text-gray-900 mb-6">Dashboard</h1>
+<!-- Welcome Header -->
+<div class="mb-12 animate-fade-in">
+    <h1 class="text-4xl font-bold text-gray-900 mb-2">
+        Welcome back, <span class="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">{{ user_name|default:"Reader" }}</span>! 📚
+    </h1>
+    <p class="text-xl text-gray-600">Continue your reading adventure and explore what's new in your community</p>
+</div>
 
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Dashboard Grid -->
+<div class="dashboard-grid">
     <!-- Reading Progress Card -->
-    <div class="bg-white p-6 rounded-lg shadow">
-        <h2 class="text-lg font-semibold mb-2">📖 Reading Progress</h2>
-        <p class="text-gray-600">Track your current books and goals</p>
-        <div class="mt-4">
-            <p class="text-sm text-gray-500">TODO: Fetch from FastAPI backend</p>
+    <div class="dashboard-card dashboard-card-accent accent-blue animate-slide-left">
+        <div class="flex items-start justify-between mb-4">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-1">📖 Reading Progress</h2>
+                <p class="text-gray-600 text-sm">Track your current books and goals</p>
+            </div>
+            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-book-open text-blue-600 text-xl"></i>
+            </div>
+        </div>
+        <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-sm font-semibold text-blue-900">Current Book</span>
+                <span class="text-xs bg-blue-600 text-white px-2 py-1 rounded">45%</span>
+            </div>
+            <div class="w-full bg-blue-200 rounded-full h-2">
+                <div class="bg-blue-600 h-2 rounded-full" style="width: 45%"></div>
+            </div>
+            <p class="text-xs text-gray-600 mt-2">TODO: Fetch from FastAPI backend</p>
+        </div>
+        <div class="mt-4 text-center">
+            <a href="{% url 'books:search' %}" class="text-blue-600 hover:text-blue-700 font-semibold text-sm">
+                <i class="fas fa-arrow-right mr-1"></i> Start Reading
+            </a>
         </div>
     </div>
 
     <!-- Active Clubs Card -->
-    <div class="bg-white p-6 rounded-lg shadow">
-        <h2 class="text-lg font-semibold mb-2">👥 Active Clubs</h2>
-        <p class="text-gray-600">Your book club memberships</p>
-        <div class="mt-4">
-            <p class="text-sm text-gray-500">TODO: Fetch from FastAPI backend</p>
+    <div class="dashboard-card dashboard-card-accent accent-orange animate-slide-left" style="animation-delay: 0.1s;">
+        <div class="flex items-start justify-between mb-4">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-1">👥 Active Clubs</h2>
+                <p class="text-gray-600 text-sm">Your book club memberships</p>
+            </div>
+            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-users text-orange-600 text-xl"></i>
+            </div>
+        </div>
+        <div class="space-y-3">
+            <div class="p-3 bg-gray-50 rounded-lg hover:bg-orange-50 transition-colors cursor-pointer">
+                <p class="font-semibold text-gray-900">Classic Literature Club</p>
+                <p class="text-xs text-gray-600 mt-1">12 members • Next: Pride & Prejudice</p>
+            </div>
+            <div class="p-3 bg-gray-50 rounded-lg hover:bg-orange-50 transition-colors cursor-pointer">
+                <p class="font-semibold text-gray-900">Sci-Fi Explorers</p>
+                <p class="text-xs text-gray-600 mt-1">8 members • Next: Dune</p>
+            </div>
+        </div>
+        <p class="text-xs text-gray-500 mt-4">TODO: Fetch from FastAPI backend</p>
+        <div class="mt-4 text-center">
+            <a href="{% url 'clubs:list' %}" class="text-orange-600 hover:text-orange-700 font-semibold text-sm">
+                <i class="fas fa-arrow-right mr-1"></i> View All Clubs
+            </a>
         </div>
     </div>
 
     <!-- Recommendations Card -->
-    <div class="bg-white p-6 rounded-lg shadow">
-        <h2 class="text-lg font-semibold mb-2">💡 Recommendations</h2>
-        <p class="text-gray-600">Discover new books</p>
-        <div class="mt-4">
-            <p class="text-sm text-gray-500">TODO: Fetch from FastAPI backend</p>
+    <div class="dashboard-card dashboard-card-accent accent-cyan animate-slide-left" style="animation-delay: 0.2s;">
+        <div class="flex items-start justify-between mb-4">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-1">✨ Recommendations</h2>
+                <p class="text-gray-600 text-sm">Discover new books</p>
+            </div>
+            <div class="w-12 h-12 bg-cyan-100 rounded-lg flex items-center justify-center">
+                <i class="fas fa-sparkles text-cyan-600 text-xl"></i>
+            </div>
+        </div>
+        <div class="space-y-2">
+            <div class="p-3 bg-gray-50 rounded-lg hover:bg-cyan-50 transition-colors cursor-pointer">
+                <p class="font-semibold text-gray-900 text-sm">The Midnight Library</p>
+                <p class="text-xs text-gray-600">Recommended by Sarah M.</p>
+            </div>
+            <div class="p-3 bg-gray-50 rounded-lg hover:bg-cyan-50 transition-colors cursor-pointer">
+                <p class="font-semibold text-gray-900 text-sm">Lessons in Chemistry</p>
+                <p class="text-xs text-gray-600">Trending in your clubs</p>
+            </div>
+        </div>
+        <p class="text-xs text-gray-500 mt-4">TODO: Fetch from FastAPI backend</p>
+        <div class="mt-4 text-center">
+            <a href="{% url 'books:search' %}" class="text-cyan-600 hover:text-cyan-700 font-semibold text-sm">
+                <i class="fas fa-arrow-right mr-1"></i> Explore More
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats Row -->
+<div class="mt-12 mb-8">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6">Your Stats</h2>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="card p-6 text-center hover:shadow-lg transition-all">
+            <div class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent mb-2">
+                12
+            </div>
+            <p class="text-gray-600 font-medium">Books Read</p>
+        </div>
+        <div class="card p-6 text-center hover:shadow-lg transition-all">
+            <div class="text-4xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent mb-2">
+                3
+            </div>
+            <p class="text-gray-600 font-medium">Active Clubs</p>
+        </div>
+        <div class="card p-6 text-center hover:shadow-lg transition-all">
+            <div class="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                45
+            </div>
+            <p class="text-gray-600 font-medium">Pages Read Today</p>
+        </div>
+        <div class="card p-6 text-center hover:shadow-lg transition-all">
+            <div class="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-500 bg-clip-text text-transparent mb-2">
+                8
+            </div>
+            <p class="text-gray-600 font-medium">Discussions</p>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="mb-8">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6">Recent Activity</h2>
+    <div class="card p-6">
+        <div class="space-y-4">
+            <div class="flex items-start gap-4 pb-4 border-b border-gray-200">
+                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-book text-blue-600"></i>
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-900">You started reading "The Great Gatsby"</p>
+                    <p class="text-sm text-gray-600">2 hours ago</p>
+                </div>
+            </div>
+            <div class="flex items-start gap-4 pb-4 border-b border-gray-200">
+                <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-comments text-orange-600"></i>
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-900">New discussion in Classic Literature Club</p>
+                    <p class="text-sm text-gray-600">Sarah: "What's your favorite part so far?"</p>
+                </div>
+            </div>
+            <div class="flex items-start gap-4">
+                <div class="w-10 h-10 bg-cyan-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-star text-cyan-600"></i>
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-900">You added a new book to your list</p>
+                    <p class="text-sm text-gray-600">"Dune" by Frank Herbert</p>
+                </div>
+            </div>
         </div>
     </div>
 </div>

@@ -1,73 +1,113 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6 text-gray-900">Search Books</h1>
-    
-    <!-- Search Form -->
-    <form method="get" class="mb-8">
-        <div class="flex gap-4">
-            <input 
-                type="text" 
-                name="q" 
-                value="{{ query }}"
-                placeholder="Search for books by title, author, or ISBN..."
-                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                autofocus
-            />
-            <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
-                Search
+<!-- Header -->
+<div class="mb-8 animate-fade-in">
+    <h1 class="text-4xl font-bold text-gray-900 mb-2">📚 Search Books</h1>
+    <p class="text-lg text-gray-600">Discover thousands of books from the Google Books API</p>
+</div>
+
+<!-- Search Form -->
+<div class="card p-6 mb-12 animate-slide-up">
+    <form method="get" class="space-y-4">
+        <div class="flex gap-3 flex-col sm:flex-row">
+            <div class="flex-1">
+                <input 
+                    type="text" 
+                    name="q" 
+                    value="{{ query }}"
+                    placeholder="Search by title, author, ISBN..."
+                    class="form-input w-full"
+                    autofocus
+                />
+            </div>
+            <button type="submit" class="btn-primary px-8 py-3 rounded-lg font-semibold whitespace-nowrap">
+                <i class="fas fa-search mr-2"></i> Search
             </button>
         </div>
-    </form>
-    
-    <!-- Results Grid -->
-    {% if query %}
-    <div class="mb-4">
-        <p class="text-gray-600">
+        {% if query %}
+        <div class="text-sm text-gray-600">
             {% if books %}
-                Found {{ books|length }} result{{ books|length|pluralize }} for "{{ query }}"
+                <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                Found <span class="font-semibold">{{ books|length }}</span> result{{ books|length|pluralize }} for "<span class="font-semibold">{{ query }}</span>"
             {% else %}
-                No results found for "{{ query }}"
+                <i class="fas fa-info-circle text-orange-500 mr-2"></i>
+                No results found for "<span class="font-semibold">{{ query }}</span>"
             {% endif %}
-        </p>
-    </div>
-    {% endif %}
-    
-    {% if books %}
-    <div class="space-y-4">
-        {% for book in books %}
-        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition duration-200 flex items-start gap-4">
-            <div class="flex-1">
-                <h3 class="font-bold text-lg mb-2">{{ book.title }}</h3>
-                
-                {% if book.authors %}
-                <p class="text-gray-600 text-sm mb-2">by {{ book.authors|join:", " }}</p>
-                {% endif %}
-                
-                {% if book.published_date %}
-                <p class="text-gray-500 text-xs mb-3">Published: {{ book.published_date|slice:":4" }}</p>
-                {% endif %}
-                
-                <form method="post" action="{% url 'books:add' google_book_id=book.id %}" style="display:inline;">
+        </div>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Results Grid -->
+{% if books %}
+<div class="book-grid animate-fade-in">
+    {% for book in books %}
+    <div class="book-card group">
+        <!-- Book Cover -->
+        <div class="book-cover relative overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100">
+            {% if book.thumbnail %}
+                <img src="{{ book.thumbnail }}" 
+                     alt="{{ book.title }}"
+                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+            {% else %}
+                <div class="w-full h-full flex flex-col items-center justify-center text-center p-4">
+                    <i class="fas fa-book text-4xl text-gray-300 mb-2"></i>
+                    <span class="text-xs text-gray-400">No Cover</span>
+                </div>
+            {% endif %}
+            
+            <!-- Overlay Action -->
+            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                <form method="post" action="{% url 'books:add' google_book_id=book.id %}">
                     {% csrf_token %}
-                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-                        Add to Catalog
+                    <button type="submit" class="btn-secondary px-6 py-2 rounded-lg font-semibold">
+                        <i class="fas fa-plus mr-2"></i> Add to Catalog
                     </button>
                 </form>
             </div>
         </div>
-        {% endfor %}
+
+        <!-- Book Info -->
+        <div class="book-info">
+            <h3 class="book-title">{{ book.title }}</h3>
+            <p class="book-author">
+                {% if book.authors %}
+                    {{ book.authors|join:", " }}
+                {% else %}
+                    Unknown Author
+                {% endif %}
+            </p>
+            {% if book.published_date %}
+            <p class="text-xs text-gray-500 mt-1">
+                <i class="fas fa-calendar-alt mr-1"></i> {{ book.published_date|slice:":4" }}
+            </p>
+            {% endif %}
+        </div>
     </div>
-    {% elif query %}
-    <div class="text-center py-12">
-        <p class="text-gray-500 mb-4">No books found matching your search.</p>
-        <p class="text-gray-400">Try different keywords or check your spelling.</p>
-    </div>
-    {% else %}
-    <div class="text-center py-12">
-        <p class="text-gray-500">Enter a search term to find books.</p>
-    </div>
-    {% endif %}
+    {% endfor %}
 </div>
+
+<!-- Empty/No Results State -->
+{% elif query %}
+<div class="card p-12 text-center animate-fade-in">
+    <div class="mb-4">
+        <i class="fas fa-search text-6xl text-gray-300"></i>
+    </div>
+    <h2 class="text-2xl font-bold text-gray-900 mb-2">No books found</h2>
+    <p class="text-gray-600 mb-6">Try searching with different keywords or check your spelling</p>
+    <a href="{% url 'books:search' %}" class="btn-outline px-6 py-2 rounded-lg font-semibold">
+        <i class="fas fa-redo mr-2"></i> New Search
+    </a>
+</div>
+{% else %}
+<div class="card p-12 text-center animate-fade-in">
+    <div class="mb-4">
+        <i class="fas fa-book-open text-6xl text-blue-300"></i>
+    </div>
+    <h2 class="text-2xl font-bold text-gray-900 mb-2">Start your search</h2>
+    <p class="text-gray-600 mb-6">Search for any book title, author name, or ISBN to discover your next great read</p>
+    <p class="text-sm text-gray-500">We have access to millions of books from the Google Books API</p>
+</div>
+{% endif %}
 {% endblock %}

@@ -1,73 +1,210 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow mt-8">
-    <h1 class="text-2xl font-bold text-gray-900 mb-6">Create Account</h1>
-    
-    {% if messages %}
-    <div class="mb-4">
-        {% for message in messages %}
-        <div class="p-3 rounded-md mb-2 {% if message.tags == 'error' %}bg-red-100 text-red-700{% elif message.tags == 'success' %}bg-green-100 text-green-700{% else %}bg-blue-100 text-blue-700{% endif %}">
-            {{ message }}
+<div class="min-h-screen flex items-center justify-center px-4 py-12">
+    <div class="w-full max-w-2xl">
+        <!-- Header -->
+        <div class="text-center mb-8 animate-fade-in">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl mb-4">
+                <i class="fas fa-sparkles text-white text-2xl"></i>
+            </div>
+            <h1 class="text-4xl font-bold text-gray-900 mb-2">Join Literattus</h1>
+            <p class="text-lg text-gray-600">Start your literary journey with thousands of book lovers</p>
         </div>
-        {% endfor %}
+
+        <!-- Card -->
+        <div class="card p-8 animate-slide-up">
+            {% if messages %}
+            <div class="mb-6 space-y-3">
+                {% for message in messages %}
+                <div class="message-alert message-{{ message.tags|default:'info' }} rounded-lg px-4 py-3 flex items-center gap-3">
+                    <i class="fas {% if message.tags == 'error' %}fa-circle-xmark text-red-500{% elif message.tags == 'success' %}fa-check-circle text-green-500{% else %}fa-info-circle text-blue-500{% endif %}"></i>
+                    <span class="text-sm">{{ message }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <form method="post" action="{% url 'core:register' %}" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Row: Email & Username -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Email Field -->
+                    <div class="form-group">
+                        <label for="email" class="form-label">
+                            <i class="fas fa-envelope mr-2 text-orange-500"></i> Email Address
+                        </label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            required
+                            value="{{ form_data.email|default:'' }}"
+                            class="form-input"
+                            placeholder="your@email.com"
+                            autocomplete="email">
+                    </div>
+
+                    <!-- Username Field -->
+                    <div class="form-group">
+                        <label for="username" class="form-label">
+                            <i class="fas fa-user mr-2 text-orange-500"></i> Username
+                        </label>
+                        <input 
+                            type="text" 
+                            id="username" 
+                            name="username" 
+                            required
+                            value="{{ form_data.username|default:'' }}"
+                            class="form-input"
+                            placeholder="choose_your_handle"
+                            autocomplete="username">
+                    </div>
+                </div>
+
+                <!-- Row: First Name & Last Name -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- First Name Field -->
+                    <div class="form-group">
+                        <label for="first_name" class="form-label">
+                            <i class="fas fa-person mr-2 text-orange-500"></i> First Name
+                        </label>
+                        <input 
+                            type="text" 
+                            id="first_name" 
+                            name="first_name" 
+                            required
+                            value="{{ form_data.first_name|default:'' }}"
+                            class="form-input"
+                            placeholder="John"
+                            autocomplete="given-name">
+                    </div>
+
+                    <!-- Last Name Field -->
+                    <div class="form-group">
+                        <label for="last_name" class="form-label">
+                            <i class="fas fa-person mr-2 text-orange-500"></i> Last Name
+                        </label>
+                        <input 
+                            type="text" 
+                            id="last_name" 
+                            name="last_name" 
+                            required
+                            value="{{ form_data.last_name|default:'' }}"
+                            class="form-input"
+                            placeholder="Doe"
+                            autocomplete="family-name">
+                    </div>
+                </div>
+
+                <!-- Row: Password & Confirm Password -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Password Field -->
+                    <div class="form-group">
+                        <label for="REDACTED" class="form-label">
+                            <i class="fas fa-lock mr-2 text-orange-500"></i> Password
+                        </label>
+                        <input 
+                            type="REDACTED" 
+                            id="REDACTED" 
+                            name="REDACTED" 
+                            required
+                            minlength="8"
+                            class="form-input"
+                            placeholder="••••••••"
+                            autocomplete="new-REDACTED">
+                        <p class="text-xs text-gray-500 mt-2">
+                            <i class="fas fa-info-circle mr-1"></i> At least 8 characters
+                        </p>
+                    </div>
+
+                    <!-- Confirm Password Field -->
+                    <div class="form-group">
+                        <label for="confirm_REDACTED" class="form-label">
+                            <i class="fas fa-check-double mr-2 text-orange-500"></i> Confirm Password
+                        </label>
+                        <input 
+                            type="REDACTED" 
+                            id="confirm_REDACTED" 
+                            name="confirm_REDACTED" 
+                            required
+                            minlength="8"
+                            class="form-input"
+                            placeholder="••••••••"
+                            autocomplete="new-REDACTED">
+                    </div>
+                </div>
+
+                <!-- Terms & Privacy -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <label class="flex items-start cursor-pointer">
+                        <input type="checkbox" required class="w-4 h-4 text-blue-600 mt-1 rounded focus:ring-blue-500">
+                        <span class="ml-3 text-sm text-gray-700">
+                            I agree to the <a href="#" class="text-blue-600 hover:underline font-medium">Terms of Service</a> and <a href="#" class="text-blue-600 hover:underline font-medium">Privacy Policy</a>
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Submit Button -->
+                <button 
+                    type="submit" 
+                    class="btn-secondary w-full py-3 rounded-lg font-bold text-lg flex items-center justify-center gap-2">
+                    <i class="fas fa-rocket"></i> Create My Account
+                </button>
+            </form>
+
+            <!-- Divider -->
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-white text-gray-600">Already a member?</span>
+                </div>
+            </div>
+
+            <!-- Login Link -->
+            <a href="{% url 'core:login' %}" class="btn-outline w-full py-3 rounded-lg font-semibold text-lg flex items-center justify-center gap-2">
+                <i class="fas fa-sign-in-alt"></i> Sign In
+            </a>
+        </div>
+
+        <!-- Social Proof -->
+        <div class="mt-8 text-center">
+            <p class="text-gray-600 mb-4">Join thousands of book lovers on Literattus</p>
+            <div class="flex justify-center gap-4 flex-wrap">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600">5K+</div>
+                    <p class="text-sm text-gray-600">Active Readers</p>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-orange-500">1.2K+</div>
+                    <p class="text-sm text-gray-600">Book Clubs</p>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-cyan-500">50K+</div>
+                    <p class="text-sm text-gray-600">Books Tracked</p>
+                </div>
+            </div>
+        </div>
     </div>
-    {% endif %}
-    
-    <form method="post" action="{% url 'core:register' %}">
-        {% csrf_token %}
-        
-        <div class="mb-4">
-            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-            <input type="email" id="email" name="email" required
-                   value="{{ form_data.email|default:'' }}"
-                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-        </div>
-        
-        <div class="mb-4">
-            <label for="username" class="block text-sm font-medium text-gray-700 mb-2">Username</label>
-            <input type="text" id="username" name="username" required
-                   value="{{ form_data.username|default:'' }}"
-                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-        </div>
-        
-        <div class="mb-4">
-            <label for="first_name" class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
-            <input type="text" id="first_name" name="first_name" required
-                   value="{{ form_data.first_name|default:'' }}"
-                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-        </div>
-        
-        <div class="mb-4">
-            <label for="last_name" class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
-            <input type="text" id="last_name" name="last_name" required
-                   value="{{ form_data.last_name|default:'' }}"
-                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-        </div>
-        
-        <div class="mb-4">
-            <label for="REDACTED" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-            <input type="REDACTED" id="REDACTED" name="REDACTED" required
-                   minlength="8"
-                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <p class="text-xs text-gray-500 mt-1">Must be at least 8 characters</p>
-        </div>
-        
-        <div class="mb-6">
-            <label for="confirm_REDACTED" class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
-            <input type="REDACTED" id="confirm_REDACTED" name="confirm_REDACTED" required
-                   minlength="8"
-                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-        </div>
-        
-        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 font-medium">
-            Create Account
-        </button>
-    </form>
-    
-    <p class="mt-4 text-center text-sm text-gray-600">
-        Already have an account?
-        <a href="{% url 'core:login' %}" class="text-blue-600 hover:text-blue-700 font-medium">Login</a>
-    </p>
 </div>
+
+<style>
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-slide-up {
+    animation: slideUp 0.5s ease;
+}
+</style>
 {% endblock %}

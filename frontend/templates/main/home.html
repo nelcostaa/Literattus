@@ -1,36 +1,137 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="text-center">
-    <h1 class="text-5xl font-bold text-gray-900 mb-4">
-        Welcome to Literattus 📚
-    </h1>
-    <p class="text-xl text-gray-600 mb-8">
-        Your social hub for book clubs and reading communities
-    </p>
-    <div class="space-x-4">
-        <a href="{% url 'core:register' %}" class="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg text-lg font-medium hover:bg-blue-700">
-            Get Started
-        </a>
-        <a href="{% url 'core:login' %}" class="inline-block border-2 border-blue-600 text-blue-600 px-8 py-3 rounded-lg text-lg font-medium hover:bg-blue-50">
-            Login
-        </a>
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="hero-content">
+        <!-- Decorative geometric shapes (CSS-rendered) -->
+        <div class="absolute hero-geometric heart animate-float" style="animation-delay: 0s;">
+            <i class="fas fa-heart"></i>
+        </div>
+        <div class="absolute hero-geometric star animate-float" style="animation-delay: 0.5s;">
+            <i class="fas fa-star"></i>
+        </div>
+        <div class="absolute hero-geometric moon animate-float" style="animation-delay: 1s;">
+            <i class="fas fa-moon"></i>
+        </div>
+
+        <h1 class="hero-title">
+            Discover & Share Your Literary Journey
+        </h1>
+        <p class="hero-subtitle">
+            Connect with book lovers, form reading clubs, and explore stories that inspire
+        </p>
+        
+        <div class="hero-buttons">
+            <a href="{% url 'core:register' %}" class="btn-primary px-8 py-4 rounded-lg">
+                <i class="fas fa-rocket mr-2"></i> Get Started Free
+            </a>
+            <a href="{% url 'core:login' %}" class="btn-outline px-8 py-4 rounded-lg text-white border-white hover:bg-white hover:text-blue-600">
+                <i class="fas fa-sign-in-alt mr-2"></i> Login
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="feature-grid">
+    <div class="card feature-card animate-slide-left">
+        <span class="feature-icon">📚</span>
+        <h3 class="feature-title">Build Your Library</h3>
+        <p class="feature-description">
+            Catalog your personal reading list with detailed information from the Google Books API. Track what you've read and what's coming next.
+        </p>
+    </div>
+
+    <div class="card feature-card animate-slide-left" style="animation-delay: 0.1s;">
+        <span class="feature-icon">👥</span>
+        <h3 class="feature-title">Join Book Clubs</h3>
+        <p class="feature-description">
+            Create or join thriving book clubs with fellow readers. Vote on book selections, share progress, and discuss your favorite stories together.
+        </p>
+    </div>
+
+    <div class="card feature-card animate-slide-left" style="animation-delay: 0.2s;">
+        <span class="feature-icon">💬</span>
+        <h3 class="feature-title">Engage in Discussions</h3>
+        <p class="feature-description">
+            Participate in rich discussions about books, characters, and themes. Share your insights and learn from other passionate readers.
+        </p>
+    </div>
+
+    <div class="card feature-card animate-slide-right">
+        <span class="feature-icon">🎯</span>
+        <h3 class="feature-title">Track Progress</h3>
+        <p class="feature-description">
+            Set reading goals and track your progress through the year. Celebrate milestones and achieve your reading ambitions with ease.
+        </p>
+    </div>
+
+    <div class="card feature-card animate-slide-right" style="animation-delay: 0.1s;">
+        <span class="feature-icon">✨</span>
+        <h3 class="feature-title">Discover Gems</h3>
+        <p class="feature-description">
+            Get personalized recommendations from your clubs and community. Find your next favorite book from trusted readers like you.
+        </p>
+    </div>
+
+    <div class="card feature-card animate-slide-right" style="animation-delay: 0.2s;">
+        <span class="feature-icon">🌟</span>
+        <h3 class="feature-title">Grow Your Circle</h3>
+        <p class="feature-description">
+            Invite friends to clubs, vote on selections together, and grow a supportive community of book enthusiasts.
+        </p>
+    </div>
+</div>
+
+<!-- Stats Section -->
+<div class="mt-24 mb-16">
+    <div class="text-center mb-12">
+        <h2 class="text-4xl font-bold text-gray-900 mb-4">Join Our Reading Community</h2>
+        <p class="text-xl text-gray-600">Thousands of book lovers are already sharing their passion for reading</p>
     </div>
     
-    <!-- Features Section -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
-        <div class="bg-white p-6 rounded-lg shadow">
-            <h3 class="text-xl font-semibold mb-2">📖 Track Your Reading</h3>
-            <p class="text-gray-600">Keep track of books you've read and want to read</p>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div class="text-center">
+            <div class="text-5xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent mb-2">
+                5K+
+            </div>
+            <p class="text-gray-600 font-medium">Active Readers</p>
         </div>
-        <div class="bg-white p-6 rounded-lg shadow">
-            <h3 class="text-xl font-semibold mb-2">👥 Join Book Clubs</h3>
-            <p class="text-gray-600">Connect with fellow readers and discuss books</p>
+        <div class="text-center">
+            <div class="text-5xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent mb-2">
+                1.2K+
+            </div>
+            <p class="text-gray-600 font-medium">Book Clubs</p>
         </div>
-        <div class="bg-white p-6 rounded-lg shadow">
-            <h3 class="text-xl font-semibold mb-2">🎯 Set Goals</h3>
-            <p class="text-gray-600">Set and achieve your reading goals</p>
+        <div class="text-center">
+            <div class="text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                50K+
+            </div>
+            <p class="text-gray-600 font-medium">Books Tracked</p>
         </div>
+        <div class="text-center">
+            <div class="text-5xl font-bold bg-gradient-to-r from-green-600 to-emerald-500 bg-clip-text text-transparent mb-2">
+                100K+
+            </div>
+            <p class="text-gray-600 font-medium">Discussions</p>
+        </div>
+    </div>
+</div>
+
+<!-- CTA Section -->
+<div class="bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-24 p-12 text-center mb-8">
+    <h2 class="text-4xl font-bold mb-4">Ready to Start Your Reading Adventure?</h2>
+    <p class="text-xl mb-8 opacity-95 max-w-2xl mx-auto">
+        Join Literattus today and connect with a vibrant community of book lovers around the world.
+    </p>
+    <div class="flex gap-4 justify-center flex-wrap">
+        <a href="{% url 'core:register' %}" class="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 rounded-lg font-bold transition-all transform hover:-translate-y-1">
+            <i class="fas fa-user-plus mr-2"></i> Create Account
+        </a>
+        <a href="{% url 'core:login' %}" class="border-2 border-white text-white hover:bg-white hover:text-blue-600 px-8 py-3 rounded-lg font-bold transition-all">
+            <i class="fas fa-sign-in-alt mr-2"></i> Sign In
+        </a>
     </div>
 </div>
 {% endblock %}
