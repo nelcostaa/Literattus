@@ -1,0 +1,32 @@
+#!/bin/bash
+# Check Literattus service status
+# Usage: ./scripts/status
+
+source "$(dirname "$0")/common.sh"
+goto_project_root
+
+echo "📊 Literattus Status"
+echo ""
+
+DOCKER_COMPOSE_CMD=$(get_docker_compose_cmd)
+sudo $DOCKER_COMPOSE_CMD ps
+
+echo ""
+if check_services_running; then
+    echo "✅ Services are running"
+    echo ""
+    echo "🌐 URLs:"
+    echo "   Frontend: http://localhost:8080"
+    echo "   Backend:  http://localhost:8000/api/docs"
+else
+    echo "⚠️  No services running"
+    echo ""
+    echo "💡 To start: ./scripts/start"
+fi
+
+echo ""
+echo "💡 Commands:"
+echo "   ./scripts/logs [service]  - View logs"
+echo "   ./scripts/stop            - Stop services"
+echo "   ./scripts/start           - Start services"
+

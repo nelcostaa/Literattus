@@ -1,0 +1,63 @@
+#!/bin/bash
+# Start Literattus services
+# Usage: ./scripts/start [--force]
+
+source "$(dirname "$0")/common.sh"
+goto_project_root
+
+FORCE_MODE=false
+if [ "$1" = "--force" ]; then
+    FORCE_MODE=true
+fi
+
+echo "🚀 Starting Literattus..."
+DOCKER_COMPOSE_CMD=$(get_docker_compose_cmd)
+
+# If force mode, do aggressive cleanup first
+if [ "$FORCE_MODE" = true ]; then
+    echo "⚡ Force mode: Cleaning up existing containers..."
+    
+    # Stop and remove containers
+    sudo $DOCKER_COMPOSE_CMD down --remove-orphans 2>/dev/null || true
+    
+    # Kill processes on ports if needed
+    for port in 8000 8080; do
+        PID=$(sudo lsof -ti :$port 2>/dev/null)
+        if [ ! -z "$PID" ]; then
+            echo "   Killing process $PID on port $port..."
+            sudo kill -9 $PID 2>/dev/null || true
+        fi
+    done
+    
+    echo "   Waiting for cleanup..."
+    sleep 2
+fi
+
+# Start services
+echo "Starting services..."
+sudo $DOCKER_COMPOSE_CMD up -d
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ Server started successfully!"
+    echo ""
+    echo "📋 Services:"
+    sudo $DOCKER_COMPOSE_CMD ps
+    echo ""
+    echo "🌐 Access your application at:"
+    echo "   Frontend: http://localhost:8080"
+    echo "   Backend API: http://localhost:8000/api/docs"
+    echo ""
+    echo "💡 Helpful commands:"
+    echo "   View logs:  ./scripts/logs [service]"
+    echo "   Check status: ./scripts/status"
+    echo "   Stop server: ./scripts/stop"
+else
+    echo ""
+    echo "❌ Failed to start server"
+    echo ""
+    echo "💡 Try force mode to clean up:"
+    echo "   ./scripts/start --force"
+    exit 1
+fi
+
