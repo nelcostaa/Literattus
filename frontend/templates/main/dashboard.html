@@ -1,165 +1,254 @@
 {% extends "base.html" %}
 
 {% block content %}
-<!-- Welcome Header -->
-<div class="mb-12 animate-fade-in">
-    <h1 class="text-4xl font-bold text-gray-900 mb-2">
-        Welcome back, <span class="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">{{ user_name|default:"Reader" }}</span>! 📚
-    </h1>
-    <p class="text-xl text-gray-600">Continue your reading adventure and explore what's new in your community</p>
+<!-- Welcome Hero Section -->
+<div class="hero-section mb-12 animate-fade-in">
+    <div class="hero-content">
+        <!-- Decorative geometric shapes -->
+        <div class="absolute hero-geometric heart animate-float" style="animation-delay: 0s;">
+            <i class="fas fa-heart"></i>
+        </div>
+        <div class="absolute hero-geometric star animate-float" style="animation-delay: 0.5s;">
+            <i class="fas fa-star"></i>
+        </div>
+        <div class="absolute hero-geometric moon animate-float" style="animation-delay: 1s;">
+            <i class="fas fa-moon"></i>
+        </div>
+
+        <h1 class="hero-title" style="font-size: 48px;">
+            Welcome back, {{ request.session.user_name|default:"Reader" }}! 📚
+        </h1>
+        <p class="hero-subtitle" style="font-size: 20px;">
+            Continue your reading adventure and explore what's new in your community
+        </p>
+    </div>
+</div>
+
+<!-- Quick Actions Feature Grid -->
+<div class="mb-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">Quick Actions</h2>
+    <div class="feature-grid">
+        <a href="{% url 'books:search' %}" class="card feature-card animate-slide-left">
+            <span class="feature-icon">🔍</span>
+            <h3 class="feature-title">Search Books</h3>
+            <p class="feature-description">
+                Find new books to read from millions of titles in the Google Books API
+            </p>
+        </a>
+
+        <a href="{% url 'books:catalog' %}" class="card feature-card animate-slide-left" style="animation-delay: 0.1s;">
+            <span class="feature-icon">📚</span>
+            <h3 class="feature-title">My Catalog</h3>
+            <p class="feature-description">
+                View your personal book collection and track your reading progress
+            </p>
+        </a>
+
+        <a href="{% url 'clubs:list' %}" class="card feature-card animate-slide-left" style="animation-delay: 0.2s;">
+            <span class="feature-icon">👥</span>
+            <h3 class="feature-title">Book Clubs</h3>
+            <p class="feature-description">
+                Join reading communities and participate in club discussions
+            </p>
+        </a>
+
+        <a href="{% url 'users:profile' %}" class="card feature-card animate-slide-left" style="animation-delay: 0.3s;">
+            <span class="feature-icon">⚙️</span>
+            <h3 class="feature-title">My Profile</h3>
+            <p class="feature-description">
+                Manage your account settings and view your reading statistics
+            </p>
+        </a>
+    </div>
 </div>
 
 <!-- Dashboard Grid -->
-<div class="dashboard-grid">
+<div class="dashboard-grid mb-12">
     <!-- Reading Progress Card -->
-    <div class="dashboard-card dashboard-card-accent accent-blue animate-slide-left">
-        <div class="flex items-start justify-between mb-4">
-            <div>
-                <h2 class="text-2xl font-bold text-gray-900 mb-1">📖 Reading Progress</h2>
-                <p class="text-gray-600 text-sm">Track your current books and goals</p>
+    <div class="dashboard-card dashboard-card-accent accent-blue animate-slide-right">
+        <div class="card-header">
+            <div class="card-icon">
+                <i class="fas fa-book-open text-blue-600"></i>
             </div>
-            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <i class="fas fa-book-open text-blue-600 text-xl"></i>
+            <div>
+                <h2 class="card-title">Reading Progress</h2>
+                <p class="text-gray-600 text-sm">Track your current books</p>
             </div>
         </div>
-        <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <div class="p-4 bg-blue-50 rounded-lg border-2 border-blue-100">
             <div class="flex justify-between items-center mb-3">
                 <span class="text-sm font-semibold text-blue-900">Current Book</span>
-                <span class="text-xs bg-blue-600 text-white px-2 py-1 rounded">45%</span>
+                <span class="text-xs bg-blue-600 text-white px-3 py-1 rounded-full font-bold">0%</span>
             </div>
-            <div class="w-full bg-blue-200 rounded-full h-2">
-                <div class="bg-blue-600 h-2 rounded-full" style="width: 45%"></div>
+            <div class="w-full bg-blue-200 rounded-full h-3 overflow-hidden">
+                <div class="bg-gradient-to-r from-blue-600 to-cyan-500 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
             </div>
-            <p class="text-xs text-gray-600 mt-2">TODO: Fetch from FastAPI backend</p>
+            <p class="text-xs text-gray-500 mt-3 italic">
+                <i class="fas fa-info-circle mr-1"></i> Start reading to track progress
+            </p>
         </div>
-        <div class="mt-4 text-center">
-            <a href="{% url 'books:search' %}" class="text-blue-600 hover:text-blue-700 font-semibold text-sm">
-                <i class="fas fa-arrow-right mr-1"></i> Start Reading
+        <div class="mt-6 text-center">
+            <a href="{% url 'books:search' %}" class="btn-primary px-6 py-2 rounded-lg text-sm font-semibold inline-block">
+                <i class="fas fa-search mr-2"></i> Find Books
             </a>
         </div>
     </div>
 
     <!-- Active Clubs Card -->
-    <div class="dashboard-card dashboard-card-accent accent-orange animate-slide-left" style="animation-delay: 0.1s;">
-        <div class="flex items-start justify-between mb-4">
-            <div>
-                <h2 class="text-2xl font-bold text-gray-900 mb-1">👥 Active Clubs</h2>
-                <p class="text-gray-600 text-sm">Your book club memberships</p>
+    <div class="dashboard-card dashboard-card-accent accent-orange animate-slide-right" style="animation-delay: 0.1s;">
+        <div class="card-header">
+            <div class="card-icon">
+                <i class="fas fa-users text-orange-600"></i>
             </div>
-            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                <i class="fas fa-users text-orange-600 text-xl"></i>
+            <div>
+                <h2 class="card-title">Active Clubs</h2>
+                <p class="text-gray-600 text-sm">Your memberships</p>
             </div>
         </div>
         <div class="space-y-3">
-            <div class="p-3 bg-gray-50 rounded-lg hover:bg-orange-50 transition-colors cursor-pointer">
-                <p class="font-semibold text-gray-900">Classic Literature Club</p>
-                <p class="text-xs text-gray-600 mt-1">12 members • Next: Pride & Prejudice</p>
+            <div class="p-4 bg-orange-50 rounded-lg border border-orange-200 hover:shadow-md transition-all cursor-pointer">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                        CL
+                    </div>
+                    <p class="font-bold text-gray-900">Classic Literature</p>
+                </div>
+                <p class="text-xs text-gray-600">
+                    <i class="fas fa-users mr-1"></i> 12 members • 
+                    <i class="fas fa-book mr-1"></i> Pride & Prejudice
+                </p>
             </div>
-            <div class="p-3 bg-gray-50 rounded-lg hover:bg-orange-50 transition-colors cursor-pointer">
-                <p class="font-semibold text-gray-900">Sci-Fi Explorers</p>
-                <p class="text-xs text-gray-600 mt-1">8 members • Next: Dune</p>
+            <div class="p-4 bg-orange-50 rounded-lg border border-orange-200 hover:shadow-md transition-all cursor-pointer">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                        SF
+                    </div>
+                    <p class="font-bold text-gray-900">Sci-Fi Explorers</p>
+                </div>
+                <p class="text-xs text-gray-600">
+                    <i class="fas fa-users mr-1"></i> 8 members • 
+                    <i class="fas fa-book mr-1"></i> Dune
+                </p>
             </div>
         </div>
-        <p class="text-xs text-gray-500 mt-4">TODO: Fetch from FastAPI backend</p>
+        <p class="text-xs text-gray-500 mt-4 text-center italic">
+            <i class="fas fa-flask mr-1"></i> Mock data - TODO: Fetch from backend
+        </p>
         <div class="mt-4 text-center">
-            <a href="{% url 'clubs:list' %}" class="text-orange-600 hover:text-orange-700 font-semibold text-sm">
-                <i class="fas fa-arrow-right mr-1"></i> View All Clubs
+            <a href="{% url 'clubs:list' %}" class="btn-secondary px-6 py-2 rounded-lg text-sm font-semibold inline-block">
+                <i class="fas fa-plus mr-2"></i> Explore Clubs
             </a>
         </div>
     </div>
 
     <!-- Recommendations Card -->
-    <div class="dashboard-card dashboard-card-accent accent-cyan animate-slide-left" style="animation-delay: 0.2s;">
-        <div class="flex items-start justify-between mb-4">
+    <div class="dashboard-card dashboard-card-accent accent-cyan animate-slide-right" style="animation-delay: 0.2s;">
+        <div class="card-header">
+            <div class="card-icon">
+                <i class="fas fa-sparkles text-cyan-600"></i>
+            </div>
             <div>
-                <h2 class="text-2xl font-bold text-gray-900 mb-1">✨ Recommendations</h2>
-                <p class="text-gray-600 text-sm">Discover new books</p>
-            </div>
-            <div class="w-12 h-12 bg-cyan-100 rounded-lg flex items-center justify-center">
-                <i class="fas fa-sparkles text-cyan-600 text-xl"></i>
+                <h2 class="card-title">For You</h2>
+                <p class="text-gray-600 text-sm">Personalized picks</p>
             </div>
         </div>
-        <div class="space-y-2">
-            <div class="p-3 bg-gray-50 rounded-lg hover:bg-cyan-50 transition-colors cursor-pointer">
-                <p class="font-semibold text-gray-900 text-sm">The Midnight Library</p>
-                <p class="text-xs text-gray-600">Recommended by Sarah M.</p>
+        <div class="space-y-3">
+            <div class="p-3 bg-cyan-50 rounded-lg border border-cyan-200 hover:shadow-md transition-all cursor-pointer">
+                <div class="flex items-start gap-3">
+                    <div class="w-12 h-16 bg-gradient-to-br from-cyan-200 to-blue-300 rounded flex items-center justify-center text-2xl flex-shrink-0">
+                        📖
+                    </div>
+                    <div>
+                        <p class="font-bold text-gray-900 text-sm">The Midnight Library</p>
+                        <p class="text-xs text-gray-600 mt-1">
+                            <i class="fas fa-user-circle mr-1"></i> Recommended by Sarah M.
+                        </p>
+                    </div>
+                </div>
             </div>
-            <div class="p-3 bg-gray-50 rounded-lg hover:bg-cyan-50 transition-colors cursor-pointer">
-                <p class="font-semibold text-gray-900 text-sm">Lessons in Chemistry</p>
-                <p class="text-xs text-gray-600">Trending in your clubs</p>
+            <div class="p-3 bg-cyan-50 rounded-lg border border-cyan-200 hover:shadow-md transition-all cursor-pointer">
+                <div class="flex items-start gap-3">
+                    <div class="w-12 h-16 bg-gradient-to-br from-purple-200 to-pink-300 rounded flex items-center justify-center text-2xl flex-shrink-0">
+                        🧪
+                    </div>
+                    <div>
+                        <p class="font-bold text-gray-900 text-sm">Lessons in Chemistry</p>
+                        <p class="text-xs text-gray-600 mt-1">
+                            <i class="fas fa-fire mr-1"></i> Trending in your clubs
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
-        <p class="text-xs text-gray-500 mt-4">TODO: Fetch from FastAPI backend</p>
+        <p class="text-xs text-gray-500 mt-4 text-center italic">
+            <i class="fas fa-flask mr-1"></i> Mock data - TODO: Fetch from backend
+        </p>
         <div class="mt-4 text-center">
-            <a href="{% url 'books:search' %}" class="text-cyan-600 hover:text-cyan-700 font-semibold text-sm">
-                <i class="fas fa-arrow-right mr-1"></i> Explore More
+            <a href="{% url 'books:search' %}" class="btn-outline px-6 py-2 rounded-lg text-sm font-semibold inline-block">
+                <i class="fas fa-compass mr-2"></i> Discover More
             </a>
         </div>
     </div>
 </div>
 
-<!-- Quick Stats Row -->
-<div class="mt-12 mb-8">
-    <h2 class="text-2xl font-bold text-gray-900 mb-6">Your Stats</h2>
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="card p-6 text-center hover:shadow-lg transition-all">
-            <div class="text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent mb-2">
-                12
+<!-- Stats Section -->
+<div class="mb-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+        <i class="fas fa-chart-line text-blue-600"></i> Your Reading Stats
+    </h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="card p-6 text-center hover:shadow-xl transition-all">
+            <div class="text-5xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent mb-3">
+                0
             </div>
-            <p class="text-gray-600 font-medium">Books Read</p>
+            <p class="text-gray-600 font-semibold text-sm">Books in Catalog</p>
+            <p class="text-xs text-gray-400 mt-1">All time</p>
         </div>
-        <div class="card p-6 text-center hover:shadow-lg transition-all">
-            <div class="text-4xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent mb-2">
-                3
+        <div class="card p-6 text-center hover:shadow-xl transition-all">
+            <div class="text-5xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent mb-3">
+                0
             </div>
-            <p class="text-gray-600 font-medium">Active Clubs</p>
+            <p class="text-gray-600 font-semibold text-sm">Active Clubs</p>
+            <p class="text-xs text-gray-400 mt-1">Memberships</p>
         </div>
-        <div class="card p-6 text-center hover:shadow-lg transition-all">
-            <div class="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                45
+        <div class="card p-6 text-center hover:shadow-xl transition-all">
+            <div class="text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-3">
+                0
             </div>
-            <p class="text-gray-600 font-medium">Pages Read Today</p>
+            <p class="text-gray-600 font-semibold text-sm">Pages Read</p>
+            <p class="text-xs text-gray-400 mt-1">This week</p>
         </div>
-        <div class="card p-6 text-center hover:shadow-lg transition-all">
-            <div class="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-500 bg-clip-text text-transparent mb-2">
-                8
+        <div class="card p-6 text-center hover:shadow-xl transition-all">
+            <div class="text-5xl font-bold bg-gradient-to-r from-green-600 to-emerald-500 bg-clip-text text-transparent mb-3">
+                0
             </div>
-            <p class="text-gray-600 font-medium">Discussions</p>
+            <p class="text-gray-600 font-semibold text-sm">Discussions</p>
+            <p class="text-xs text-gray-400 mt-1">Participated</p>
         </div>
     </div>
 </div>
 
 <!-- Recent Activity -->
 <div class="mb-8">
-    <h2 class="text-2xl font-bold text-gray-900 mb-6">Recent Activity</h2>
-    <div class="card p-6">
-        <div class="space-y-4">
-            <div class="flex items-start gap-4 pb-4 border-b border-gray-200">
-                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-book text-blue-600"></i>
-                </div>
-                <div>
-                    <p class="font-semibold text-gray-900">You started reading "The Great Gatsby"</p>
-                    <p class="text-sm text-gray-600">2 hours ago</p>
-                </div>
+    <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+        <i class="fas fa-clock text-orange-600"></i> Recent Activity
+    </h2>
+    <div class="card p-8">
+        <div class="text-center py-12">
+            <div class="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
+                <i class="fas fa-inbox text-5xl text-gray-400"></i>
             </div>
-            <div class="flex items-start gap-4 pb-4 border-b border-gray-200">
-                <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-comments text-orange-600"></i>
-                </div>
-                <div>
-                    <p class="font-semibold text-gray-900">New discussion in Classic Literature Club</p>
-                    <p class="text-sm text-gray-600">Sarah: "What's your favorite part so far?"</p>
-                </div>
-            </div>
-            <div class="flex items-start gap-4">
-                <div class="w-10 h-10 bg-cyan-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-star text-cyan-600"></i>
-                </div>
-                <div>
-                    <p class="font-semibold text-gray-900">You added a new book to your list</p>
-                    <p class="text-sm text-gray-600">"Dune" by Frank Herbert</p>
-                </div>
+            <h3 class="text-2xl font-bold text-gray-900 mb-3">No Activity Yet</h3>
+            <p class="text-gray-600 mb-6 max-w-md mx-auto">
+                Start your reading journey by adding books to your catalog or joining a book club!
+            </p>
+            <div class="flex gap-3 justify-center flex-wrap">
+                <a href="{% url 'books:search' %}" class="btn-primary px-6 py-3 rounded-lg font-semibold inline-flex items-center gap-2">
+                    <i class="fas fa-search"></i> Search Books
+                </a>
+                <a href="{% url 'clubs:list' %}" class="btn-secondary px-6 py-3 rounded-lg font-semibold inline-flex items-center gap-2">
+                    <i class="fas fa-users"></i> Join Clubs
+                </a>
             </div>
         </div>
     </div>
