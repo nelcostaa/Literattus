@@ -5,88 +5,87 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{{ title }} - Literattus{% endblock %}</title>
     
-    <!-- Tailwind CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.0/dist/tailwind.min.css" rel="stylesheet">
-    <!-- Font Awesome for Icons -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
     
     {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-gray-50 font-sans">
-    <!-- Navigation -->
+<body class="bg-gray-50 font-sans flex flex-col min-h-screen">
     <nav class="bg-white shadow-lg border-b-4 border-blue-600 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
-                <!-- Logo & Brand -->
-                <div class="flex items-center space-x-2">
+                <!-- Logo + Tagline -->
+                <div class="flex-shrink-0 flex items-center space-x-3">
                     <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center transform -rotate-45">
-                        <svg class="w-6 h-6 text-white transform rotate-45" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10.5 1.5H5a1.5 1.5 0 00-1.5 1.5v14a1.5 1.5 0 001.5 1.5h10a1.5 1.5 0 001.5-1.5V8L10.5 1.5z"/>
-                            <path d="M10.5 1.5v6h6"/>
-                        </svg>
                     </div>
-                    <a href="{% url 'core:home' %}" class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent">
-                        Literattus
-                    </a>
+                    <div class="flex flex-col leading-tight">
+                        <a href="{% url 'core:home' %}" class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent hover:scale-105 transition-transform">
+                            Literattus
+                        </a>
+                        <span class="text-xs text-gray-500 hidden sm:block">Your social hub for book clubs</span>
+                    </div>
                 </div>
 
                 <!-- Desktop Navigation Links -->
-                <div class="hidden sm:flex space-x-1">
-                    {% if request.session.access_token %}
-                        <a href="{% url 'core:dashboard' %}" class="nav-link nav-link-active px-4 py-2 rounded-lg text-sm font-semibold transition-all">
-                            <i class="fas fa-chart-line mr-1"></i> Dashboard
-                        </a>
-                        <a href="{% url 'books:search' %}" class="nav-link px-4 py-2 rounded-lg text-sm font-semibold transition-all">
-                            <i class="fas fa-search mr-1"></i> Books
-                        </a>
-                        <a href="{% url 'clubs:list' %}" class="nav-link px-4 py-2 rounded-lg text-sm font-semibold transition-all">
-                            <i class="fas fa-users mr-1"></i> Clubs
-                        </a>
-                    {% else %}
-                        <a href="{% url 'core:home' %}" class="nav-link px-4 py-2 rounded-lg text-sm font-semibold transition-all">
-                            <i class="fas fa-home mr-1"></i> Home
-                        </a>
-                    {% endif %}
-                </div>
+                <div class="hidden sm:flex sm:items-center sm:space-x-6">
+                    <div class="flex space-x-1">
+                        {% if request.session.access_token %}
+                            <a href="{% url 'core:dashboard' %}" class="nav-link nav-link-active px-4 py-2 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fas fa-chart-line mr-1"></i> Dashboard
+                            </a>
+                            <a href="{% url 'books:search' %}" class="nav-link px-4 py-2 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fas fa-search mr-1"></i> Books
+                            </a>
+                            <a href="{% url 'clubs:list' %}" class="nav-link px-4 py-2 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fas fa-users mr-1"></i> Clubs
+                            </a>
+                        {% else %}
+                            <a href="{% url 'core:home' %}" class="nav-link px-4 py-2 rounded-lg text-sm font-semibold transition-all">
+                                <i class="fas fa-home mr-1"></i> Home
+                            </a>
+                        {% endif %}
+                    </div>
 
-                <!-- Right-side Actions -->
-                <div class="flex items-center space-x-2">
-                    {% if request.session.access_token %}
-                        <div class="hidden sm:flex items-center space-x-3 pl-3 border-l-2 border-gray-200">
-                            <div class="text-right">
-                                <p class="text-xs text-gray-500">Welcome</p>
-                                <p class="text-sm font-semibold text-gray-900">{{ request.session.user_name|default:"User" }}</p>
+                    <div class="flex items-center space-x-2">
+                        {% if request.session.access_token %}
+                            <div class="flex items-center space-x-3 pl-3 border-l-2 border-gray-200">
+                                <div class="text-right">
+                                    <p class="text-xs text-gray-500">Welcome</p>
+                                    <p class="text-sm font-semibold text-gray-900">{{ request.session.user_name|default:"User" }}</p>
+                                </div>
+                                <div class="w-10 h-10 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center">
+                                    <span class="text-white font-bold text-sm">
+                                        {{ request.session.user_name|first|upper|default:"U" }}
+                                    </span>
+                                </div>
+                                <a href="{% url 'core:logout' %}" class="ml-4 btn-outline px-4 py-2 rounded-lg text-sm font-semibold transition-all">
+                                    <i class="fas fa-sign-out-alt mr-1"></i> Logout
+                                </a>
                             </div>
-                            <div class="w-10 h-10 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center">
-                                <span class="text-white font-bold text-sm">
-                                    {{ request.session.user_name|first|upper|default:"U" }}
-                                </span>
+                        {% else %}
+                            <div class="flex space-x-2">
+                                <a href="{% url 'core:login' %}" class="btn-outline px-4 py-2 rounded-lg text-sm font-semibold transition-all">
+                                    Login
+                                </a>
+                                <a href="{% url 'core:register' %}" class="btn-primary px-4 py-2 rounded-lg text-sm font-semibold transition-all">
+                                    Sign Up
+                                </a>
                             </div>
-                            <a href="{% url 'core:logout' %}" class="ml-4 btn-outline px-4 py-2 rounded-lg text-sm font-semibold transition-all">
-                                <i class="fas fa-sign-out-alt mr-1"></i> Logout
-                            </a>
-                        </div>
-                    {% else %}
-                        <div class="hidden sm:flex space-x-2">
-                            <a href="{% url 'core:login' %}" class="btn-outline px-4 py-2 rounded-lg text-sm font-semibold transition-all">
-                                Login
-                            </a>
-                            <a href="{% url 'core:register' %}" class="btn-primary px-4 py-2 rounded-lg text-sm font-semibold transition-all">
-                                Sign Up
-                            </a>
-                        </div>
-                    {% endif %}
+                        {% endif %}
+                    </div>
                 </div>
 
                 <!-- Mobile Menu Button -->
-                <button id="mobile-menu-btn" class="sm:hidden p-2 rounded-lg hover:bg-gray-100 transition-all">
-                    <i class="fas fa-bars text-2xl text-gray-700"></i>
-                </button>
+                <div class="sm:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="p-2 rounded-lg hover:bg-gray-100 transition-all">
+                        <i class="fas fa-bars text-2xl text-gray-700"></i>
+                    </button>
+                </div>
             </div>
 
-            <!-- Mobile Navigation -->
+            <!-- Mobile Menu -->
             <div id="mobile-menu" class="hidden sm:hidden pb-4 space-y-2">
                 {% if request.session.access_token %}
                     <a href="{% url 'core:dashboard' %}" class="block px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 font-medium">Dashboard</a>
@@ -94,6 +93,7 @@
                     <a href="{% url 'clubs:list' %}" class="block px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 font-medium">Clubs</a>
                     <a href="{% url 'core:logout' %}" class="block px-4 py-3 rounded-lg hover:bg-red-50 text-gray-700 font-medium">Logout</a>
                 {% else %}
+                    <a href="{% url 'core:home' %}" class="block px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 font-medium">Home</a>
                     <a href="{% url 'core:login' %}" class="block px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 font-medium">Login</a>
                     <a href="{% url 'core:register' %}" class="block px-4 py-3 rounded-lg bg-blue-600 text-white font-medium">Sign Up</a>
                 {% endif %}
@@ -101,7 +101,6 @@
         </div>
     </nav>
 
-    <!-- Messages -->
     {% if messages %}
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
             {% for message in messages %}
@@ -113,13 +112,11 @@
         </div>
     {% endif %}
 
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-grow">
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-gradient-to-r from-blue-900 to-blue-700 text-white mt-16 border-t-4 border-orange-500">
+    <footer class="bg-gradient-to-r from-blue-900 to-blue-700 text-white mt-auto border-t-4 border-orange-500">
         <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
                 <div>
@@ -155,7 +152,6 @@
         </div>
     </footer>
 
-    <!-- Mobile Menu Script -->
     <script>
         document.getElementById('mobile-menu-btn').addEventListener('click', function() {
             const menu = document.getElementById('mobile-menu');
@@ -166,4 +162,3 @@
     {% block extra_js %}{% endblock %}
 </body>
 </html>
-
