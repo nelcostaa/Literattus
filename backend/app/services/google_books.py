@@ -163,63 +163,87 @@ class GoogleBooksService:
 def transform_to_book_create(google_book_data: Dict[str, Any]) -> BookCreate:
     """
     Transform Google Books API response to BookCreate schema.
-    
-    Args:
-        google_book_data: Raw book data from Google Books API
-        
-    Returns:
-        BookCreate: Pydantic schema ready for database insertion
+    Accepts either raw Google Books item (with volumeInfo) or
+    the parsed schema returned by GoogleBooksService._parse_book_data.
     """
-    volume_info = google_book_data.get("volumeInfo", {})
-    
-    # Extract ISBN-13 (preferred) or ISBN-10
-    isbn = None
-    for identifier in volume_info.get("industryIdentifiers", []):
-        if identifier.get("type") == "ISBN_13":
-            isbn = identifier.get("identifier")
-            break
-    if not isbn:  # Fallback to ISBN-10
-        for identifier in volume_info.get("industryIdentifiers", []):
-            if identifier.get("type") == "ISBN_10":
-                isbn = identifier.get("identifier")
+    # Case A: raw item with volumeInfo
+    if 'volumeInfo' in google_book_data:
+        volume_info = google_book_data.get('volumeInfo', {})
+        # Extract ISBN-13 (preferred) or ISBN-10
+        isbn = None
+        for identifier in volume_info.get('industryIdentifiers', []):
+            if identifier.get('type') == 'ISBN_13':
+                isbn = identifier.get('identifier')
                 break
-    
-    # Parse published date - handle various formats
+        if not isbn:
+            for identifier in volume_info.get('industryIdentifiers', []):
+                if identifier.get('type') == 'ISBN_10':
+                    isbn = identifier.get('identifier')
+                    break
+        # Parse published date
+        published_date = None
+        if date_str := volume_info.get('publishedDate'):
+            try:
+                published_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+            except ValueError:
+                try:
+                    published_date = datetime.strptime(date_str + "-01", "%Y-%m-%d").date()
+                except ValueError:
+                    try:
+                        published_date = datetime.strptime(date_str + "-01-01", "%Y-%m-%d").date()
+                    except ValueError:
+                        logger.warning(f"Could not parse date: {date_str}")
+        # Extract cover image
+        image_links = volume_info.get('imageLinks', {})
+        cover_image = (
+            image_links.get('large') or
+            image_links.get('medium') or
+            image_links.get('small') or
+            image_links.get('thumbnail')
+        )
+        return BookCreate(
+            id=google_book_data.get('id'),
+            title=volume_info.get('title', 'Unknown Title'),
+            author=", ".join(volume_info.get('authors', ['Unknown Author'])),
+            description=volume_info.get('description'),
+            coverImage=cover_image,
+            isbn=isbn,
+            publishedDate=published_date,
+            pageCount=volume_info.get('pageCount')
+        )
+
+    # Case B: parsed item with googleBooksId, title, author, etc.
+    parsed = google_book_data
+    gb_id = parsed.get('googleBooksId') or parsed.get('id')
+    # Parse published date string
     published_date = None
-    if date_str := volume_info.get("publishedDate"):
+    if date_str := parsed.get('publishedDate'):
         try:
-            # Try full date: "2023-01-15"
             published_date = datetime.strptime(date_str, "%Y-%m-%d").date()
         except ValueError:
             try:
-                # Try year-month: "2023-01"
                 published_date = datetime.strptime(date_str + "-01", "%Y-%m-%d").date()
             except ValueError:
                 try:
-                    # Try year only: "2023"
                     published_date = datetime.strptime(date_str + "-01-01", "%Y-%m-%d").date()
                 except ValueError:
                     logger.warning(f"Could not parse date: {date_str}")
-    
-    # Extract cover image (prefer higher resolution)
-    image_links = volume_info.get("imageLinks", {})
-    cover_image = (
-        image_links.get("large") or
-        image_links.get("medium") or
-        image_links.get("small") or
-        image_links.get("thumbnail")
-    )
-    
-    # Create BookCreate schema
+    # Author may be a string
+    author_value = parsed.get('author')
+    if isinstance(author_value, list):
+        author_str = ", ".join(author_value) if author_value else "Unknown Author"
+    else:
+        author_str = author_value or "Unknown Author"
+
     return BookCreate(
-        id=google_book_data.get("id"),
-        title=volume_info.get("title", "Unknown Title"),
-        author=", ".join(volume_info.get("authors", ["Unknown Author"])),
-        description=volume_info.get("description"),
-        coverImage=cover_image,
-        isbn=isbn,
+        id=gb_id,
+        title=parsed.get('title', 'Unknown Title'),
+        author=author_str,
+        description=parsed.get('description'),
+        coverImage=parsed.get('coverImage'),
+        isbn=parsed.get('isbn'),
         publishedDate=published_date,
-        pageCount=volume_info.get("pageCount")
+        pageCount=parsed.get('pageCount')
     )
 
 
