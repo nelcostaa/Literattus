@@ -285,32 +285,40 @@ body {
 
 .hero-geometric {
     position: absolute;
-    opacity: 0.1;
+    opacity: 0.3;
     z-index: 0;
+    font-size: 80px;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
 }
 
-.heart {
-    width: 120px;
-    height: 120px;
+.hero-shape-1 {
     top: 10%;
-    right: 15%;
-    color: var(--accent-orange);
+    right: 12%;
+    font-size: 100px;
 }
 
-.star {
-    width: 80px;
-    height: 80px;
-    top: 40%;
-    right: 5%;
-    color: var(--accent-gold);
+.hero-shape-2 {
+    top: 45%;
+    right: 8%;
+    font-size: 70px;
 }
 
-.moon {
-    width: 100px;
-    height: 100px;
-    bottom: 20%;
+.hero-shape-3 {
+    bottom: 15%;
+    left: 8%;
+    font-size: 90px;
+}
+
+.hero-shape-4 {
+    top: 20%;
     left: 10%;
-    color: var(--accent-cyan);
+    font-size: 85px;
+}
+
+.hero-shape-5 {
+    bottom: 25%;
+    right: 15%;
+    font-size: 65px;
 }
 
 /* ==========================================
@@ -330,9 +338,8 @@ body {
 }
 
 .feature-icon {
-    font-size: 48px;
-    margin-bottom: 16px;
-    display: block;
+    font-size: 32px;
+    display: inline-block;
 }
 
 .feature-title {
