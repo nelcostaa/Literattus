@@ -27,6 +27,7 @@ async def get_books(
 ):
     """
     Get list of books from local catalog (paginated).
+    DEPRECATED: Use /my-catalog for user-specific books with reading progress.
     
     Args:
         skip: Number of records to skip
@@ -39,6 +40,66 @@ async def get_books(
     """
     books = db.query(Book).offset(skip).limit(limit).all()
     return books
+
+
+@router.get("/my-catalog")
+async def get_my_catalog(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get user's personal catalog with reading progress data.
+    Returns books the user has added, joined with their reading_progress.
+    
+    Args:
+        skip: Number of records to skip
+        limit: Maximum number of records to return
+        db: Database session
+        current_user: Current authenticated user
+        
+    Returns:
+        List[dict]: Books with reading progress data
+    """
+    from app.models.reading_progress import ReadingProgress
+    
+    # Query reading_progress for this user, joined with book data
+    progress_entries = db.query(
+        ReadingProgress,
+        Book
+    ).join(
+        Book, ReadingProgress.bookId == Book.id
+    ).filter(
+        ReadingProgress.userId == current_user.id
+    ).offset(skip).limit(limit).all()
+    
+    # Transform to dict with both progress and book info
+    result = []
+    for progress, book in progress_entries:
+        result.append({
+            'id': book.id,
+            'title': book.title,
+            'author': book.author,
+            'description': book.description,
+            'coverImage': book.coverImage,
+            'isbn': book.isbn,
+            'publishedDate': book.publishedDate.isoformat() if book.publishedDate else None,
+            'pageCount': book.pageCount,
+            'createdAt': book.createdAt.isoformat() if book.createdAt else None,
+            'updatedAt': book.updatedAt.isoformat() if book.updatedAt else None,
+            # Reading progress fields
+            'status': progress.status,
+            'currentPage': progress.currentPage,
+            'progressPercentage': progress.progressPercentage,
+            'rating': progress.rating,
+            'review': progress.review,
+            'startedAt': progress.startedAt.isoformat() if progress.startedAt else None,
+            'completedAt': progress.completedAt.isoformat() if progress.completedAt else None,
+        })
+    
+    logger.info(f"Fetched {len(result)} books from user {current_user.id}'s catalog")
+    return result
 
 
 @router.get("/search")
@@ -230,12 +291,14 @@ async def search_and_save_book(
 ):
     """
     Fetch book from Google Books API and save to database.
+    Also creates a reading_progress entry for the current user.
     
     Workflow:
     1. Check if book already exists in DB
     2. If not, fetch from Google Books API
     3. Transform and save to database
-    4. Return saved book
+    4. Create reading_progress entry for user (status: not_started)
+    5. Return saved book
     
     Args:
         google_book_id: Google Books volume ID
@@ -249,39 +312,64 @@ async def search_and_save_book(
         HTTPException: If book not found in Google Books
     """
     from app.services.google_books import transform_to_book_create
+    from app.models.reading_progress import ReadingProgress
     
     # Check if book exists in database
     existing_book = db.query(Book).filter(Book.id == google_book_id).first()
+    book_already_existed = existing_book is not None
+    
     if existing_book:
         logger.info(f"Book already exists in database: {existing_book.title}")
-        return existing_book
+        book_to_return = existing_book
+    else:
+        # Fetch from Google Books API
+        book_data = await google_books_service.get_book_by_id(google_book_id)
+        if not book_data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Book with ID {google_book_id} not found in Google Books"
+            )
+        
+        # Transform to BookCreate schema
+        try:
+            book_create = transform_to_book_create(book_data)
+        except Exception as e:
+            logger.error(f"Failed to transform book data: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to process book data from Google Books"
+            )
+        
+        # Save to database
+        new_book = Book(**book_create.model_dump())
+        db.add(new_book)
+        db.commit()
+        db.refresh(new_book)
+        
+        logger.success(f"Added book from Google Books: {new_book.title} (ID: {new_book.id})")
+        book_to_return = new_book
     
-    # Fetch from Google Books API
-    book_data = await google_books_service.get_book_by_id(google_book_id)
-    if not book_data:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Book with ID {google_book_id} not found in Google Books"
+    # Create reading_progress entry for this user (idempotent)
+    existing_progress = db.query(ReadingProgress).filter(
+        ReadingProgress.userId == current_user.id,
+        ReadingProgress.bookId == book_to_return.id
+    ).first()
+    
+    if not existing_progress:
+        reading_progress = ReadingProgress(
+            userId=current_user.id,
+            bookId=book_to_return.id,
+            status="not_started",
+            currentPage=0,
+            progressPercentage=0.0
         )
+        db.add(reading_progress)
+        db.commit()
+        logger.info(f"Created reading_progress for user {current_user.id} on book {book_to_return.id}")
+    else:
+        logger.info(f"Reading progress already exists for user {current_user.id} on book {book_to_return.id}")
     
-    # Transform to BookCreate schema
-    try:
-        book_create = transform_to_book_create(book_data)
-    except Exception as e:
-        logger.error(f"Failed to transform book data: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to process book data from Google Books"
-        )
-    
-    # Save to database
-    new_book = Book(**book_create.model_dump())
-    db.add(new_book)
-    db.commit()
-    db.refresh(new_book)
-    
-    logger.success(f"Added book from Google Books: {new_book.title} (ID: {new_book.id})")
-    return new_book
+    return book_to_return
 
 
 @router.delete("/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
