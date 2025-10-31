@@ -66,10 +66,17 @@
 
     <!-- 3. Action Buttons Row -->
     <div class="flex flex-wrap gap-4 mb-8 animate-fade-in" style="animation-delay: 0.1s;">
-        <button class="btn-primary flex-grow sm:flex-grow-0"><i class="fas fa-book-open mr-2"></i> Update Progress</button>
+        {% if not in_catalog %}
+        <form method="post" action="{% url 'books:add' google_book_id=google_book_id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-primary flex-grow sm:flex-grow-0"><i class="fas fa-plus mr-2"></i> Add to Catalog</button>
+        </form>
+        {% endif %}
         <button class="btn-secondary flex-grow sm:flex-grow-0"><i class="fas fa-users mr-2"></i> Add to Club</button>
         <button class="btn-outline flex-grow sm:flex-grow-0"><i class="fas fa-share-alt mr-2"></i> Share</button>
+        {% if in_catalog %}
         <button class="btn-outline border-red-500 text-red-500 hover:bg-red-50 flex-grow sm:flex-grow-0 ml-auto"><i class="fas fa-trash-alt mr-2"></i> Remove</button>
+        {% endif %}
     </div>
 
     <!-- 5. Description Card -->
