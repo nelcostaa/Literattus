@@ -17,18 +17,44 @@ import os
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
-from datetime import datetime
 
-# Load environment variables from backend/.env
-backend_env = Path(__file__).parent / "backend" / ".env"
-if backend_env.exists():
-    load_dotenv(backend_env)
-    print(f"✓ Loaded AWS RDS credentials from: {backend_env}")
-else:
-    print(f"❌ backend/.env not found at: {backend_env}")
+# Load environment variables from backend/.env using robust path resolution
+def get_backend_env_path() -> Path:
+    """
+    Resolves the absolute path to backend/.env based on the script location.
+    Handles invocation from any directory context.
+    """
+    script_dir = Path(__file__).resolve().parent
+    candidate = script_dir / "backend" / ".env"
+    if candidate.exists():
+        return candidate
+
+    # Try navigating up tree (for execution from scripts/)
+    repo_root = script_dir.parent
+    candidate2 = repo_root / "backend" / ".env"
+    if candidate2.exists():
+        return candidate2
+
+    # Try current working directory (if called from project root)
+    cwd = Path.cwd()
+    candidate3 = cwd / "backend" / ".env"
+    if candidate3.exists():
+        return candidate3
+
+    # Not found, give up with helpful error
+    print(
+        "❌ backend/.env not found.\n"
+        f"Tried:\n"
+        f"  - {candidate}\n"
+        f"  - {candidate2}\n"
+        f"  - {candidate3}"
+    )
     sys.exit(1)
 
-# Database configuration from AWS RDS
+backend_env = get_backend_env_path()
+load_dotenv(backend_env)
+print(f"✓ Loaded AWS RDS credentials from: {backend_env}")
+
 DB_CONFIG = {
     'host': os.getenv('DB_HOST'),
     'port': int(os.getenv('DB_PORT', '3306')),
