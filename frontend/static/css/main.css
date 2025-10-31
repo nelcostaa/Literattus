@@ -11,7 +11,7 @@
     --accent-cyan: #06b6d4;
     --accent-gold: #fbbf24;
     --accent-purple: #a855f7;
-    --text-primary: #1f2937;
+    --text-primary: #1f2938;
     --text-secondary: #6b7280;
     --bg-light: #f9fafb;
     --border-radius: 12px;
@@ -285,32 +285,40 @@ body {
 
 .hero-geometric {
     position: absolute;
-    opacity: 0.1;
+    opacity: 0.3;
     z-index: 0;
+    font-size: 80px;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
 }
 
-.heart {
-    width: 120px;
-    height: 120px;
+.hero-shape-1 {
     top: 10%;
-    right: 15%;
-    color: var(--accent-orange);
+    right: 12%;
+    font-size: 100px;
 }
 
-.star {
-    width: 80px;
-    height: 80px;
-    top: 40%;
-    right: 5%;
-    color: var(--accent-gold);
+.hero-shape-2 {
+    top: 45%;
+    right: 8%;
+    font-size: 70px;
 }
 
-.moon {
-    width: 100px;
-    height: 100px;
-    bottom: 20%;
+.hero-shape-3 {
+    bottom: 15%;
+    left: 8%;
+    font-size: 90px;
+}
+
+.hero-shape-4 {
+    top: 20%;
     left: 10%;
-    color: var(--accent-cyan);
+    font-size: 85px;
+}
+
+.hero-shape-5 {
+    bottom: 25%;
+    right: 15%;
+    font-size: 65px;
 }
 
 /* ==========================================
@@ -330,9 +338,8 @@ body {
 }
 
 .feature-icon {
-    font-size: 48px;
-    margin-bottom: 16px;
-    display: block;
+    font-size: 32px;
+    display: inline-block;
 }
 
 .feature-title {
@@ -426,6 +433,7 @@ body {
         opacity: 0;
         transform: translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -437,6 +445,7 @@ body {
         opacity: 0;
         transform: translateX(-30px);
     }
+
     to {
         opacity: 1;
         transform: translateX(0);
@@ -448,6 +457,7 @@ body {
         opacity: 0;
         transform: translateX(30px);
     }
+
     to {
         opacity: 1;
         transform: translateX(0);
@@ -455,18 +465,24 @@ body {
 }
 
 @keyframes pulse {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 1;
     }
+
     50% {
         opacity: 0.5;
     }
 }
 
 @keyframes float {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: translateY(0px);
     }
+
     50% {
         transform: translateY(-10px);
     }
@@ -476,6 +492,7 @@ body {
     0% {
         background-position: -1200px 0;
     }
+
     100% {
         background-position: 1200px 0;
     }
@@ -683,4 +700,3 @@ body {
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
-
