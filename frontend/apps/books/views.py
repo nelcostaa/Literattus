@@ -22,11 +22,11 @@ def get_auth_headers(request):
 
 @jwt_login_required
 def book_catalog(request):
-    """Display user's saved books from database."""
+    """Display user's personal book catalog with reading progress."""
     try:
-        # Fetch books from FastAPI backend
+        # Fetch user's catalog with reading progress from FastAPI backend
         response = requests.get(
-            f"{settings.FASTAPI_BACKEND_URL}/api/books/",
+            f"{settings.FASTAPI_BACKEND_URL}/api/books/my-catalog",
             headers=get_auth_headers(request),
             timeout=10
         )
@@ -34,18 +34,28 @@ def book_catalog(request):
         if response.status_code == 200:
             books = response.json()
         else:
-            logger.warning(f"Failed to fetch books: {response.status_code}")
+            logger.warning(f"Failed to fetch catalog: {response.status_code}")
             books = []
             messages.warning(request, 'Unable to load your book catalog')
             
     except requests.exceptions.RequestException as e:
-        logger.error(f"Error fetching books: {e}")
+        logger.error(f"Error fetching catalog: {e}")
         books = []
         messages.error(request, 'Unable to connect to book service')
     
+    # Compute reading statistics
+    reading_count = sum(1 for book in books if book.get('status') == 'reading')
+    not_started_count = sum(1 for book in books if book.get('status') == 'not_started')
+    completed_count = sum(1 for book in books if book.get('status') == 'completed')
+    abandoned_count = sum(1 for book in books if book.get('status') == 'abandoned')
+    
     context = {
         'title': 'My Book Catalog',
-        'books': books
+        'books': books,
+        'reading_count': reading_count,
+        'not_started_count': not_started_count,
+        'completed_count': completed_count,
+        'abandoned_count': abandoned_count,
     }
     return render(request, 'books/catalog.html', context)
 
@@ -160,9 +170,10 @@ def add_book(request, google_book_id):
 def book_detail(request, book_id):
     """Display detailed information about a book."""
     book = None
+    in_catalog = False
     
     try:
-        # Fetch book details from FastAPI
+        # Fetch book details from FastAPI (DB)
         response = requests.get(
             f"{settings.FASTAPI_BACKEND_URL}/api/books/{book_id}",
             headers=get_auth_headers(request),
@@ -171,9 +182,20 @@ def book_detail(request, book_id):
         
         if response.status_code == 200:
             book = response.json()
+            in_catalog = True
         elif response.status_code == 404:
-            messages.error(request, 'Book not found')
-            return redirect('books:catalog')
+            # Fallback: fetch from Google Books via backend
+            fallback = requests.get(
+                f"{settings.FASTAPI_BACKEND_URL}/api/books/google/{book_id}",
+                headers=get_auth_headers(request),
+                timeout=10
+            )
+            if fallback.status_code == 200:
+                book = fallback.json()
+                in_catalog = False
+            else:
+                messages.error(request, 'Book not found')
+                return redirect('books:catalog')
         else:
             messages.warning(request, 'Unable to load book details')
             
@@ -184,7 +206,9 @@ def book_detail(request, book_id):
     
     context = {
         'title': book.get('title', 'Book Details') if book else 'Book Details',
-        'book': book
+        'book': book,
+        'in_catalog': in_catalog,
+        'google_book_id': (book.get('googleBooksId') if book else None) or (book.get('id') if book else None),
     }
     return render(request, 'books/detail.html', context)
 
