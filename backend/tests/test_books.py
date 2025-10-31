@@ -39,13 +39,20 @@ def test_get_books(client, auth_headers):
 
 def test_get_book_by_id(client, auth_headers):
     """Test getting a specific book."""
-    # Create a book
-    create_response = client.post("/api/books/", headers=auth_headers, json={
+    # Create a book with more details
+    book_payload = {
         "id": "test789",
         "title": "Specific Book",
-        "author": "Specific Author"
-    })
+        "author": "Specific Author",
+        "description": "A detailed description.",
+        "coverImage": "http://example.com/cover.jpg",
+        "isbn": "9780321765723",
+        "publishedDate": "2023-01-15",
+        "pageCount": 450
+    }
+    create_response = client.post("/api/books/", headers=auth_headers, json=book_payload)
     
+    assert create_response.status_code == 201
     book_id = create_response.json()["id"]
     
     response = client.get(f"/api/books/{book_id}", headers=auth_headers)
@@ -54,6 +61,18 @@ def test_get_book_by_id(client, auth_headers):
     data = response.json()
     assert data["id"] == book_id
     assert data["title"] == "Specific Book"
+    assert data["author"] == "Specific Author"
+    assert data["description"] == "A detailed description."
+    assert data["coverImage"] == "http://example.com/cover.jpg"
+    assert data["isbn"] == "9780321765723"
+    assert data["publishedDate"] == "2023-01-15"
+    assert data["pageCount"] == 450
+
+
+def test_get_book_not_found(client, auth_headers):
+    """Test getting a book that does not exist."""
+    response = client.get("/api/books/nonexistentid", headers=auth_headers)
+    assert response.status_code == 404
 
 
 def test_update_book(client, auth_headers):
