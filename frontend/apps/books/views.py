@@ -72,22 +72,39 @@ def book_search(request):
                 
                 # Transform Google Books API response for easier template access
                 books = []
-                for book in raw_books:
-                    vol_info = book.get('volumeInfo', {})
-                    image_links = vol_info.get('imageLinks', {})
-                    
-                    books.append({
-                        'id': book.get('id', ''),
-                        'title': vol_info.get('title', 'Untitled'),
-                        'authors': vol_info.get('authors', []),
-                        'published_date': vol_info.get('publishedDate', ''),
-                        'thumbnail': image_links.get('thumbnail', ''),
-                        'description': vol_info.get('description', '')
-                    })
+                for item in raw_books:
+                    # Case 1: Raw Google Books item structure
+                    if item.get('id') and ('volumeInfo' in item):
+                        vol_info = item.get('volumeInfo', {})
+                        image_links = vol_info.get('imageLinks', {})
+                        books.append({
+                            'id': item.get('id'),
+                            'title': vol_info.get('title', 'Untitled'),
+                            'authors': vol_info.get('authors', []),
+                            'published_date': vol_info.get('publishedDate', ''),
+                            'thumbnail': image_links.get('thumbnail', ''),
+                            'description': vol_info.get('description', '')
+                        })
+                    # Case 2: Backend-parsed item structure
+                    elif item.get('googleBooksId'):
+                        # item keys: googleBooksId, title, author (string), coverImage, publishedDate, pageCount, averageRating
+                        author_str = item.get('author') or ''
+                        authors_list = [a.strip() for a in author_str.split(',') if a.strip()] if author_str else []
+                        books.append({
+                            'id': item.get('googleBooksId'),
+                            'title': item.get('title', 'Untitled'),
+                            'authors': authors_list,
+                            'published_date': item.get('publishedDate', ''),
+                            'thumbnail': item.get('coverImage', ''),
+                            'description': item.get('description', '')
+                        })
+                    # Ignore items without identifiers
+                    else:
+                        continue
                 
-                if not books:
-                    messages.info(request, f'No books found for "{query}"')
-                else:
+                if not books and query:
+                    messages.info(request, f'No valid books found for "{query}"')
+                elif books:
                     logger.info(f"Search successful: {len(books)} books found")
                     logger.debug(f"First book: {books[0] if books else 'None'}")
             else:
