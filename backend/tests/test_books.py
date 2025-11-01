@@ -258,3 +258,43 @@ def test_my_catalog_empty_for_new_user(client, auth_headers):
     data = r.json()
     assert isinstance(data, list)
 
+
+def test_get_related_books(client, auth_headers, test_book):
+    """Test getting related books for a book."""
+    from unittest.mock import patch, AsyncMock
+    
+    # Mock the Google Books service to return related books
+    mock_related_books = [
+        {
+            "googleBooksId": "related1",
+            "title": "Related Book 1",
+            "author": "Test Author",
+            "coverImage": "http://example.com/cover1.jpg"
+        },
+        {
+            "googleBooksId": "related2",
+            "title": "Related Book 2",
+            "author": "Test Author",
+            "coverImage": "http://example.com/cover2.jpg"
+        }
+    ]
+    
+    with patch('app.api.books.google_books_service.search_books', new_callable=AsyncMock) as mock_search:
+        mock_search.return_value = mock_related_books
+        
+        response = client.get(f"/api/books/{test_book.id}/related", headers=auth_headers)
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert "results" in data
+        assert len(data["results"]) > 0
+        # Should filter out the current book
+        assert test_book.id not in [b.get("googleBooksId") for b in data["results"]]
+
+
+def test_get_related_books_book_not_found(client, auth_headers):
+    """Test getting related books for a non-existent book."""
+    response = client.get("/api/books/nonexistent/related", headers=auth_headers)
+    
+    assert response.status_code == 404
+

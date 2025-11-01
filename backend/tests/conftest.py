@@ -74,6 +74,24 @@ def test_user(db_session):
 
 
 @pytest.fixture
+def test_book(db_session):
+    """Create a test book."""
+    book = Book(
+        id="testbook123",
+        title="Test Book",
+        author="Test Author",
+        description="A test book description",
+        pageCount=300,
+        isbn="9780123456789"
+    )
+    db_session.add(book)
+    db_session.commit()
+    db_session.refresh(book)
+    
+    return book
+
+
+@pytest.fixture
 def auth_headers(client, test_user):
     """Get authentication headers for test user."""
     response = client.post("/api/auth/login", json={
