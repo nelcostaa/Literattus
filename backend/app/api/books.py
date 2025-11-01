@@ -405,3 +405,84 @@ async def delete_book(
     
     return None
 
+
+@router.get("/{book_id}/related")
+async def get_related_books(
+    book_id: str,
+    max_results: int = Query(6, ge=1, le=20, description="Maximum number of related books"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get related books based on the current book's author or similar title.
+    Filters out the current book from results.
+    
+    Args:
+        book_id: Book ID (Google Books ID)
+        max_results: Maximum number of related books to return
+        db: Database session
+        current_user: Current authenticated user
+        
+    Returns:
+        dict: Related books from Google Books API
+        
+    Raises:
+        HTTPException: If book not found
+    """
+    # First, get the current book details
+    book = db.query(Book).filter(Book.id == book_id).first()
+    
+    if not book:
+        # Try to fetch from Google Books API if not in local DB
+        google_book = await google_books_service.get_book_by_id(book_id)
+        if not google_book:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Book not found"
+            )
+        # Use data from Google Books
+        author = google_book.get("author", "")
+        title = google_book.get("title", "")
+    else:
+        author = book.author
+        title = book.title
+    
+    # Search for books by the same author
+    # Google Books API supports "inauthor:" prefix for author search
+    search_query = f"inauthor:{author}" if author else f'intitle:"{title}"'
+    
+    # Search for related books
+    related_books = await google_books_service.search_books(
+        query=search_query,
+        max_results=max_results + 5,  # Fetch more to account for filtering
+        start_index=0
+    )
+    
+    # Filter out the current book and limit results
+    filtered_books = []
+    for book_data in related_books:
+        # Skip if it's the same book (by ID)
+        if book_data.get("googleBooksId") == book_id:
+            continue
+        
+        # Also skip if title is too similar (likely the same book)
+        book_title = book_data.get("title", "").lower().strip()
+        current_title = title.lower().strip()
+        if book_title == current_title:
+            continue
+        
+        filtered_books.append(book_data)
+        
+        # Stop once we have enough results
+        if len(filtered_books) >= max_results:
+            break
+    
+    logger.info(f"Found {len(filtered_books)} related books for book {book_id}")
+    
+    return {
+        "book_id": book_id,
+        "search_query": search_query,
+        "total_results": len(filtered_books),
+        "results": filtered_books
+    }
+

@@ -3,7 +3,7 @@
 {% block title %}{{ book.title }} - Book Details{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
+<div class="container mx-auto px-4 py-8 max-w-7xl">
     <!-- 1. Breadcrumb Navigation -->
     <div class="mb-6 text-sm animate-fade-in">
         <a href="{% url 'core:dashboard' %}" class="hover:underline text-blue-600">Dashboard</a> / 
@@ -13,50 +13,73 @@
 
     {% if book %}
     <!-- 2. Hero Section (Book Header) -->
-    <div class="hero-section card p-8 mb-8 animate-fade-in">
-        <div class="hero-content flex flex-col md:flex-row gap-8">
-            <!-- Left Column (Book Cover) -->
+    <div class="hero-section card p-6 md:p-8 mb-8 animate-fade-in">
+        <div class="hero-content flex flex-col md:flex-row gap-6 md:gap-8">
+            <!-- Left Column (40% - Book Cover) -->
             <div class="md:w-2/5 flex-shrink-0">
                 {% if book.coverImage %}
-                    <img src="{{ book.coverImage }}" alt="{{ book.title }}" class="book-cover shadow-2xl rounded-lg animate-float w-full">
+                    <div class="book-cover shadow-2xl rounded-lg overflow-hidden animate-float">
+                        <img src="{{ book.coverImage }}" alt="{{ book.title }}" class="w-full h-full object-cover">
+                    </div>
                 {% else %}
-                    <div class="book-cover shadow-2xl rounded-lg bg-gray-200 flex items-center justify-center h-full">
-                        <span class="text-gray-500">No Cover Available</span>
+                    <div class="book-cover shadow-2xl rounded-lg bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                        <i class="fas fa-book text-6xl text-gray-400"></i>
                     </div>
                 {% endif %}
             </div>
-            <!-- Right Column (Book Metadata) -->
+            
+            <!-- Right Column (60% - Book Metadata) -->
             <div class="md:w-3/5">
-                <h1 class="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent mb-3">{{ book.title }}</h1>
-                <p class="text-2xl text-gray-700 mb-4">by <span class="font-semibold">{{ book.author }}</span></p>
+                <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent mb-3">
+                    {{ book.title }}
+                </h1>
+                <p class="text-xl md:text-2xl text-gray-700 mb-4">
+                    <i class="fas fa-user text-gray-500 mr-2"></i>
+                    by <span class="font-semibold">{{ book.author }}</span>
+                </p>
 
                 {% if book.averageRating %}
                 <div class="flex items-center gap-2 mb-6">
-                    <span class="text-yellow-500 text-2xl">★</span>
-                    <span class="text-xl font-bold text-gray-800">{{ book.averageRating|floatformat:1 }}</span>
+                    {% for i in "12345"|make_list %}
+                        {% if forloop.counter <= book.averageRating|floatformat:0 %}
+                            <i class="fas fa-star text-yellow-500"></i>
+                        {% else %}
+                            <i class="far fa-star text-gray-300"></i>
+                        {% endif %}
+                    {% endfor %}
+                    <span class="text-xl font-bold text-gray-800 ml-2">{{ book.averageRating|floatformat:1 }}</span>
                     <span class="text-gray-500">/ 5.0</span>
                 </div>
                 {% endif %}
 
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-center mb-6">
-                    <div class="card p-3">
-                        <p class="font-bold text-xl text-blue-600">{{ book.pageCount|default:"N/A" }}</p>
+                <!-- Quick Stats Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+                    {% if book.pageCount %}
+                    <div class="card p-3 text-center">
+                        <p class="font-bold text-xl text-blue-600">{{ book.pageCount }}</p>
                         <p class="text-xs text-gray-500">Pages</p>
                     </div>
-                    <div class="card p-3">
-                        <p class="font-bold text-xl text-orange-500">{{ book.publishedDate|slice:":4"|default:"N/A" }}</p>
+                    {% endif %}
+                    {% if book.publishedDate %}
+                    <div class="card p-3 text-center">
+                        <p class="font-bold text-xl text-orange-500">{{ book.publishedDate|slice:":4" }}</p>
                         <p class="text-xs text-gray-500">Published</p>
                     </div>
-                    <div class="card p-3">
-                        <p class="font-bold text-xl text-cyan-500">{{ book.language|upper|default:"N/A" }}</p>
+                    {% endif %}
+                    {% if book.language %}
+                    <div class="card p-3 text-center">
+                        <p class="font-bold text-xl text-cyan-500">{{ book.language|upper }}</p>
                         <p class="text-xs text-gray-500">Language</p>
                     </div>
+                    {% endif %}
                 </div>
 
                 {% if book.categories %}
-                <div class="flex flex-wrap gap-2 mb-6">
+                <div class="flex flex-wrap gap-2">
                     {% for category in book.categories %}
-                        <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">{{ category }}</span>
+                        <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                            {{ category }}
+                        </span>
                     {% endfor %}
                 </div>
                 {% endif %}
@@ -66,49 +89,316 @@
 
     <!-- 3. Action Buttons Row -->
     <div class="flex flex-wrap gap-4 mb-8 animate-fade-in" style="animation-delay: 0.1s;">
-        {% if not in_catalog %}
-        <form method="post" action="{% url 'books:add' google_book_id=google_book_id %}">
+        {% if in_catalog and reading_progress %}
+            <button onclick="showProgressForm()" class="btn-primary flex-grow sm:flex-grow-0">
+                <i class="fas fa-edit mr-2"></i> Update Progress
+            </button>
+        {% elif in_catalog %}
+            <button onclick="showProgressForm()" class="btn-primary flex-grow sm:flex-grow-0">
+                <i class="fas fa-play mr-2"></i> Start Reading
+            </button>
+        {% else %}
+            <form method="post" action="{% url 'books:add' google_book_id=google_book_id %}" class="inline-block">
+                {% csrf_token %}
+                <button type="submit" class="btn-primary flex-grow sm:flex-grow-0">
+                    <i class="fas fa-plus-circle mr-2"></i> Add to Catalog
+                </button>
+            </form>
+        {% endif %}
+        
+        {% if user_clubs %}
+        <button onclick="showClubSelection()" class="btn-secondary flex-grow sm:flex-grow-0">
+            <i class="fas fa-users mr-2"></i> Add to Club
+        </button>
+        {% endif %}
+        
+        {% if in_catalog %}
+        <form method="post" action="{% url 'books:remove' book_id=google_book_id %}" class="inline-block" 
+              onsubmit="return confirm('Are you sure you want to remove this book from your catalog?');">
             {% csrf_token %}
-            <button type="submit" class="btn-primary flex-grow sm:flex-grow-0"><i class="fas fa-plus mr-2"></i> Add to Catalog</button>
+            <button type="submit" class="btn-outline border-red-500 text-red-500 hover:bg-red-50 flex-grow sm:flex-grow-0">
+                <i class="fas fa-trash-alt mr-2"></i> Remove from Catalog
+            </button>
         </form>
         {% endif %}
-        <button class="btn-secondary flex-grow sm:flex-grow-0"><i class="fas fa-users mr-2"></i> Add to Club</button>
-        <button class="btn-outline flex-grow sm:flex-grow-0"><i class="fas fa-share-alt mr-2"></i> Share</button>
-        {% if in_catalog %}
-        <button class="btn-outline border-red-500 text-red-500 hover:bg-red-50 flex-grow sm:flex-grow-0 ml-auto"><i class="fas fa-trash-alt mr-2"></i> Remove</button>
-        {% endif %}
     </div>
 
-    <!-- 5. Description Card -->
-    <div class="card p-8 mb-8 animate-slide-left" style="animation-delay: 0.2s;">
-        <h2 class="text-2xl font-bold text-gray-900 mb-4">Description</h2>
-        <div class="prose max-w-none text-gray-700 leading-relaxed">
-            <p>{{ book.description|default:"No description available."|linebreaks }}</p>
-        </div>
-        <div class="mt-6 pt-6 border-t border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800 mb-2">Details</h3>
-            <p class="text-sm text-gray-600"><strong>Publisher:</strong> {{ book.publisher|default:"N/A" }}</p>
-            <p class="text-sm text-gray-600"><strong>ISBN:</strong> {{ book.isbn|default:"N/A" }}</p>
+    <!-- 4. Tabs Section -->
+    <div class="card p-4 mb-8">
+        <div class="flex flex-wrap gap-2 border-b border-gray-200 pb-2">
+            <button onclick="showTab('description')" id="tab-description" 
+                    class="px-4 py-2 rounded-t-lg bg-blue-100 text-blue-700 font-semibold tab-button active">
+                Description
+            </button>
+            {% if in_catalog %}
+            <button onclick="showTab('progress')" id="tab-progress" 
+                    class="px-4 py-2 rounded-t-lg hover:bg-gray-100 tab-button">
+                Reading Progress
+            </button>
+            {% endif %}
+            {% if user_clubs %}
+            <button onclick="showTab('clubs')" id="tab-clubs" 
+                    class="px-4 py-2 rounded-t-lg hover:bg-gray-100 tab-button">
+                Add to Club
+            </button>
+            {% endif %}
         </div>
     </div>
 
-    <!-- Sections for future implementation -->
-    <div class="dashboard-grid gap-8">
-        <div class="dashboard-card dashboard-card-accent accent-blue animate-slide-left" style="animation-delay: 0.3s;">
+    <!-- Tab Content: Description -->
+    <div id="content-description" class="tab-content">
+        <div class="card p-6 md:p-8 mb-8 animate-slide-left" style="animation-delay: 0.2s;">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Description</h2>
+            <div class="prose max-w-none text-gray-700 leading-relaxed">
+                <p>{{ book.description|default:"No description available."|linebreaks }}</p>
+            </div>
+            
+            {% if book.categories %}
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">Genres & Categories</h3>
+                <div class="flex flex-wrap gap-2">
+                    {% for category in book.categories %}
+                        <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">
+                            {{ category }}
+                        </span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Details</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                    {% if book.isbn %}
+                    <p class="text-gray-600"><strong>ISBN:</strong> {{ book.isbn }}</p>
+                    {% endif %}
+                    {% if book.publisher %}
+                    <p class="text-gray-600"><strong>Publisher:</strong> {{ book.publisher }}</p>
+                    {% endif %}
+                    {% if book.publishedDate %}
+                    <p class="text-gray-600"><strong>Published:</strong> {{ book.publishedDate }}</p>
+                    {% endif %}
+                    {% if book.pageCount %}
+                    <p class="text-gray-600"><strong>Pages:</strong> {{ book.pageCount }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab Content: Reading Progress (if in catalog) -->
+    {% if in_catalog %}
+    <div id="content-progress" class="tab-content hidden">
+        <div class="dashboard-card dashboard-card-accent accent-blue animate-slide-left mb-8" style="animation-delay: 0.3s;">
             <h3 class="text-xl font-bold mb-4">Reading Progress</h3>
-            <p class="text-gray-600">Track your progress through the book. (Coming Soon)</p>
-        </div>
-        <div class="dashboard-card dashboard-card-accent accent-orange animate-slide-left" style="animation-delay: 0.4s;">
-            <h3 class="text-xl font-bold mb-4">Club Discussions</h3>
-            <p class="text-gray-600">See what your clubs are saying. (Coming Soon)</p>
-        </div>
-        <div class="dashboard-card dashboard-card-accent accent-cyan animate-slide-left" style="animation-delay: 0.5s;">
-            <h3 class="text-xl font-bold mb-4">Related Books</h3>
-            <p class="text-gray-600">Discover similar books. (Coming Soon)</p>
+            
+            {% if reading_progress %}
+                <!-- Progress Bar -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-semibold text-gray-700">Progress</span>
+                        <span class="text-sm font-bold text-blue-600">{{ reading_progress.progressPercentage|floatformat:0 }}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-4">
+                        <div class="bg-gradient-to-r from-blue-600 to-cyan-500 h-4 rounded-full transition-all duration-300" 
+                             style="width: {{ reading_progress.progressPercentage }}%"></div>
+                    </div>
+                    {% if book.pageCount %}
+                    <p class="text-xs text-gray-500 mt-1">
+                        Page {{ reading_progress.currentPage }} of {{ book.pageCount }}
+                    </p>
+                    {% endif %}
+                </div>
+
+                <!-- Status Badge -->
+                <div class="mb-6">
+                    {% if reading_progress.status == "not_started" %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-gray-100 text-gray-700">
+                            <i class="fas fa-bookmark mr-2"></i> Not Started
+                        </span>
+                    {% elif reading_progress.status == "reading" %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-700">
+                            <i class="fas fa-book-open mr-2"></i> Currently Reading
+                        </span>
+                    {% elif reading_progress.status == "completed" %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-700">
+                            <i class="fas fa-check-circle mr-2"></i> Completed
+                        </span>
+                    {% elif reading_progress.status == "abandoned" %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-red-100 text-red-700">
+                            <i class="fas fa-times-circle mr-2"></i> Abandoned
+                        </span>
+                    {% endif %}
+                </div>
+
+                <!-- Reading Statistics -->
+                {% if reading_stats %}
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+                    <div>
+                        <p class="text-xs text-gray-500">Pages per Day</p>
+                        <p class="text-lg font-bold text-blue-600">{{ reading_stats.pages_per_day }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">Days Remaining</p>
+                        <p class="text-lg font-bold text-orange-600">{{ reading_stats.days_remaining|floatformat:0 }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">Estimated Completion</p>
+                        <p class="text-sm font-semibold text-gray-700">{{ reading_stats.estimated_completion }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Start/Completion Dates -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 text-sm">
+                    {% if reading_progress.startedAt %}
+                    <div>
+                        <p class="text-gray-500">Started Reading</p>
+                        <p class="font-semibold text-gray-800">{{ reading_progress.startedAt|slice:":10" }}</p>
+                    </div>
+                    {% endif %}
+                    {% if reading_progress.completedAt %}
+                    <div>
+                        <p class="text-gray-500">Completed</p>
+                        <p class="font-semibold text-gray-800">{{ reading_progress.completedAt|slice:":10" }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Update Progress Form -->
+                <form method="post" action="{% url 'books:update_progress' book_id=google_book_id %}" class="space-y-4">
+                    {% csrf_token %}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="current_page" class="block text-sm font-medium text-gray-700 mb-2">
+                                Current Page
+                            </label>
+                            <input type="number" id="current_page" name="current_page" 
+                                   value="{{ reading_progress.currentPage }}" min="0" 
+                                   {% if book.pageCount %}max="{{ book.pageCount }}"{% endif %}
+                                   class="form-input w-full">
+                        </div>
+                        <div>
+                            <label for="status" class="block text-sm font-medium text-gray-700 mb-2">
+                                Status
+                            </label>
+                            <select id="status" name="status" class="form-select w-full">
+                                <option value="not_started" {% if reading_progress.status == "not_started" %}selected{% endif %}>Not Started</option>
+                                <option value="reading" {% if reading_progress.status == "reading" %}selected{% endif %}>Reading</option>
+                                <option value="completed" {% if reading_progress.status == "completed" %}selected{% endif %}>Completed</option>
+                                <option value="abandoned" {% if reading_progress.status == "abandoned" %}selected{% endif %}>Abandoned</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save mr-2"></i> Update Progress
+                    </button>
+                </form>
+            {% else %}
+                <p class="text-gray-600 mb-4">Start tracking your reading progress by updating your current page.</p>
+                <form method="post" action="{% url 'books:update_progress' book_id=google_book_id %}" class="space-y-4">
+                    {% csrf_token %}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="current_page" class="block text-sm font-medium text-gray-700 mb-2">
+                                Current Page
+                            </label>
+                            <input type="number" id="current_page" name="current_page" 
+                                   value="0" min="0" 
+                                   {% if book.pageCount %}max="{{ book.pageCount }}"{% endif %}
+                                   class="form-input w-full">
+                        </div>
+                        <div>
+                            <label for="status" class="block text-sm font-medium text-gray-700 mb-2">
+                                Status
+                            </label>
+                            <select id="status" name="status" class="form-select w-full">
+                                <option value="not_started">Not Started</option>
+                                <option value="reading" selected>Reading</option>
+                                <option value="completed">Completed</option>
+                                <option value="abandoned">Abandoned</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-play mr-2"></i> Start Reading
+                    </button>
+                </form>
+            {% endif %}
         </div>
     </div>
+    {% endif %}
+
+    <!-- Tab Content: Club Selection -->
+    {% if user_clubs %}
+    <div id="content-clubs" class="tab-content hidden">
+        <div class="mb-8 animate-slide-left" style="animation-delay: 0.4s;">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6">Select a Club</h3>
+            <div class="dashboard-grid gap-6">
+                {% for club in user_clubs %}
+                <div class="card p-6 hover:shadow-lg transition-shadow">
+                    <h4 class="text-xl font-bold text-gray-900 mb-2">{{ club.name }}</h4>
+                    {% if club.description %}
+                    <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ club.description }}</p>
+                    {% endif %}
+                    <div class="flex items-center justify-between text-sm text-gray-500 mb-4">
+                        <span><i class="fas fa-users mr-1"></i> {{ club.memberCount|default:"0" }} members</span>
+                    </div>
+                    <button onclick="alert('Suggest to club feature coming soon!')" class="btn-secondary w-full mt-4">
+                        <i class="fas fa-plus mr-2"></i> Suggest to Club
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 8. Related Books Section -->
+    {% if related_books %}
+    <div class="mb-8 animate-slide-left" style="animation-delay: 0.5s;">
+        <h3 class="text-2xl font-bold text-gray-900 mb-6">Related Books</h3>
+        <div class="book-grid">
+            {% for related_book in related_books %}
+            <a href="{% url 'books:detail' related_book.googleBooksId %}" class="book-card group">
+                <div class="book-cover relative overflow-hidden bg-gradient-to-br from-blue-100 to-cyan-100">
+                    {% if related_book.coverImage %}
+                        <img src="{{ related_book.coverImage }}" 
+                             alt="{{ related_book.title }}"
+                             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
+                    {% else %}
+                        <div class="w-full h-full flex flex-col items-center justify-center text-center p-4 bg-gradient-to-br from-gray-200 to-gray-300">
+                            <i class="fas fa-book text-5xl text-gray-400 mb-2"></i>
+                            <span class="text-xs text-gray-600 font-semibold">{{ related_book.title|truncatewords:2 }}</span>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Hover Overlay -->
+                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
+                        <a href="{% url 'books:detail' related_book.googleBooksId %}" class="btn-outline px-2 py-0.5 rounded text-xs text-white border border-white hover:bg-blue-600 whitespace-nowrap">
+                            <i class="fas fa-eye mr-0.5 text-xs"></i> View Details
+                        </a>
+                        <form method="post" action="{% url 'books:add' google_book_id=related_book.googleBooksId %}" class="w-full">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-secondary px-2 py-0.5 rounded text-xs w-full whitespace-nowrap">
+                                <i class="fas fa-plus mr-0.5 text-xs"></i> Add
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="book-info">
+                    <h4 class="font-bold text-lg mb-1 line-clamp-2">{{ related_book.title }}</h4>
+                    <p class="text-gray-600 text-sm">{{ related_book.author|default:"Unknown Author" }}</p>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 
     {% else %}
+    <!-- Book Not Found -->
     <div class="card p-12 text-center">
         <div class="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
             <i class="fas fa-exclamation-triangle text-5xl text-gray-400"></i>
@@ -119,4 +409,41 @@
     </div>
     {% endif %}
 </div>
+
+<script>
+// Tab switching functionality
+function showTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+    
+    // Remove active class from all tabs
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.classList.remove('bg-blue-100', 'text-blue-700', 'font-semibold');
+        button.classList.add('hover:bg-gray-100');
+    });
+    
+    // Show selected tab content
+    const content = document.getElementById('content-' + tabName);
+    if (content) {
+        content.classList.remove('hidden');
+    }
+    
+    // Activate selected tab button
+    const button = document.getElementById('tab-' + tabName);
+    if (button) {
+        button.classList.add('bg-blue-100', 'text-blue-700', 'font-semibold');
+        button.classList.remove('hover:bg-gray-100');
+    }
+}
+
+function showProgressForm() {
+    showTab('progress');
+}
+
+function showClubSelection() {
+    showTab('clubs');
+}
+</script>
 {% endblock %}
