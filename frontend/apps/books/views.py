@@ -168,15 +168,23 @@ def add_book(request, google_book_id):
 
 @jwt_login_required
 def book_detail(request, book_id):
-    """Display detailed information about a book."""
+    """
+    Display detailed information about a book.
+    Fetches book details, reading progress, user's clubs, and related books.
+    """
     book = None
     in_catalog = False
+    reading_progress = None
+    user_clubs = []
+    related_books = []
+    
+    headers = get_auth_headers(request)
     
     try:
-        # Fetch book details from FastAPI (DB)
+        # 1. Fetch book details from FastAPI (DB)
         response = requests.get(
             f"{settings.FASTAPI_BACKEND_URL}/api/books/{book_id}",
-            headers=get_auth_headers(request),
+            headers=headers,
             timeout=10
         )
         
@@ -187,7 +195,7 @@ def book_detail(request, book_id):
             # Fallback: fetch from Google Books via backend
             fallback = requests.get(
                 f"{settings.FASTAPI_BACKEND_URL}/api/books/google/{book_id}",
-                headers=get_auth_headers(request),
+                headers=headers,
                 timeout=10
             )
             if fallback.status_code == 200:
@@ -204,13 +212,162 @@ def book_detail(request, book_id):
         messages.error(request, 'Unable to connect to book service')
         return redirect('books:catalog')
     
+    # 2. Fetch reading progress if book is in catalog
+    if in_catalog:
+        try:
+            progress_response = requests.get(
+                f"{settings.FASTAPI_BACKEND_URL}/api/progress/{book_id}",
+                headers=headers,
+                timeout=10
+            )
+            if progress_response.status_code == 200:
+                reading_progress = progress_response.json()
+        except requests.exceptions.RequestException as e:
+            logger.warning(f"Could not fetch reading progress: {e}")
+    
+    # 3. Fetch user's clubs for "Add to Club" functionality
+    try:
+        clubs_response = requests.get(
+            f"{settings.FASTAPI_BACKEND_URL}/api/clubs/my-clubs",
+            headers=headers,
+            timeout=10
+        )
+        if clubs_response.status_code == 200:
+            user_clubs = clubs_response.json()
+    except requests.exceptions.RequestException as e:
+        logger.warning(f"Could not fetch user clubs: {e}")
+    
+    # 4. Fetch related books
+    try:
+        related_response = requests.get(
+            f"{settings.FASTAPI_BACKEND_URL}/api/books/{book_id}/related",
+            headers=headers,
+            params={'max_results': 6},
+            timeout=10
+        )
+        if related_response.status_code == 200:
+            related_data = related_response.json()
+            related_books = related_data.get('results', [])
+    except requests.exceptions.RequestException as e:
+        logger.warning(f"Could not fetch related books: {e}")
+    
+    # Calculate reading statistics if progress exists
+    reading_stats = None
+    if reading_progress and book and book.get('pageCount'):
+        total_pages = book.get('pageCount', 0)
+        current_page = reading_progress.get('currentPage', 0)
+        pages_left = max(0, total_pages - current_page)
+        
+        # Calculate pages per day if started
+        if reading_progress.get('startedAt'):
+            from datetime import datetime, timedelta
+            try:
+                started_at = datetime.fromisoformat(reading_progress['startedAt'].replace('Z', '+00:00'))
+                days_elapsed = max(1, (datetime.now(started_at.tzinfo) - started_at).days)
+                pages_per_day = current_page / days_elapsed if days_elapsed > 0 else 0
+                
+                # Estimate completion date
+                if pages_per_day > 0 and pages_left > 0:
+                    days_remaining = pages_left / pages_per_day
+                    estimated_completion = datetime.now() + timedelta(days=int(days_remaining))
+                    reading_stats = {
+                        'pages_per_day': round(pages_per_day, 1),
+                        'days_remaining': round(days_remaining, 0),
+                        'estimated_completion': estimated_completion.strftime('%B %d, %Y'),
+                        'pages_left': pages_left,
+                        'total_pages': total_pages,
+                        'current_page': current_page,
+                    }
+            except Exception as e:
+                logger.warning(f"Could not calculate reading stats: {e}")
+    
+    google_book_id = (book.get('googleBooksId') if book else None) or (book.get('id') if book else None)
+    
     context = {
-        'title': book.get('title', 'Book Details') if book else 'Book Details',
+        'title': f"{book.get('title', 'Book Details')} - Book Details" if book else 'Book Details',
         'book': book,
         'in_catalog': in_catalog,
-        'google_book_id': (book.get('googleBooksId') if book else None) or (book.get('id') if book else None),
+        'google_book_id': google_book_id,
+        'reading_progress': reading_progress,
+        'reading_stats': reading_stats,
+        'user_clubs': user_clubs,
+        'related_books': related_books,
     }
     return render(request, 'books/detail.html', context)
+
+
+@jwt_login_required
+@require_http_methods(["POST"])
+def update_progress(request, book_id):
+    """Update reading progress for a book."""
+    try:
+        current_page = request.POST.get('current_page')
+        status = request.POST.get('status')
+        
+        # Validate inputs
+        if current_page is None or status is None:
+            messages.error(request, 'Current page and status are required')
+            return redirect('books:detail', book_id=book_id)
+        
+        try:
+            current_page = int(current_page)
+        except ValueError:
+            messages.error(request, 'Current page must be a number')
+            return redirect('books:detail', book_id=book_id)
+        
+        # Prepare update data
+        update_data = {
+            'currentPage': current_page,
+            'status': status
+        }
+        
+        # Call FastAPI to update progress
+        response = requests.put(
+            f"{settings.FASTAPI_BACKEND_URL}/api/progress/{book_id}",
+            json=update_data,
+            headers=get_auth_headers(request),
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            messages.success(request, 'Reading progress updated!')
+        elif response.status_code == 404:
+            messages.error(request, 'Reading progress not found. Please add the book to your catalog first.')
+        else:
+            messages.error(request, 'Unable to update reading progress')
+            
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error updating progress for {book_id}: {e}")
+        messages.error(request, 'Unable to connect to book service')
+    
+    return redirect('books:detail', book_id=book_id)
+
+
+@jwt_login_required
+@require_http_methods(["POST"])
+def remove_book(request, book_id):
+    """Remove book from user's catalog (delete reading progress)."""
+    try:
+        # Call FastAPI to delete reading progress
+        response = requests.delete(
+            f"{settings.FASTAPI_BACKEND_URL}/api/progress/{book_id}",
+            headers=get_auth_headers(request),
+            timeout=10
+        )
+        
+        if response.status_code == 204:
+            messages.success(request, 'Book removed from your catalog')
+            return redirect('books:catalog')
+        elif response.status_code == 404:
+            messages.error(request, 'Book not found in your catalog')
+        else:
+            messages.error(request, 'Unable to remove book from catalog')
+            
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error removing book {book_id}: {e}")
+        messages.error(request, 'Unable to connect to book service')
+    
+    return redirect('books:detail', book_id=book_id)
 
 
 # Keep old views for backward compatibility (redirects)

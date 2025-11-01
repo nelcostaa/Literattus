@@ -49,7 +49,8 @@ class BookViewsTestCase(TestCase):
         self.assertIn('book', response.context)
         self.assertEqual(response.context['book']['title'], 'A Test Book')
         self.assertEqual(response.context['book']['pageCount'], 350)
-        mock_get.assert_called_once()
+        # Multiple API calls are now made (book, progress, clubs, related)
+        self.assertGreaterEqual(mock_get.call_count, 1)
 
     @patch('apps.books.views.requests.get')
     def test_book_detail_view_not_found(self, mock_get):
@@ -91,6 +92,7 @@ class BookViewsTestCase(TestCase):
         # First call: /api/books/{id} -> 404
         resp_404 = MagicMock()
         resp_404.status_code = 404
+        
         # Second call: /api/books/google/{id} -> 200 with parsed item
         google_item = {
             'googleBooksId': 'gb123',
@@ -105,7 +107,18 @@ class BookViewsTestCase(TestCase):
         resp_200 = MagicMock()
         resp_200.status_code = 200
         resp_200.json.return_value = google_item
-        mock_get.side_effect = [resp_404, resp_200]
+        
+        # Third call: /api/clubs/my-clubs -> 200 with clubs
+        resp_clubs = MagicMock()
+        resp_clubs.status_code = 200
+        resp_clubs.json.return_value = []
+        
+        # Fourth call: /api/books/gb123/related -> 200 with related books
+        resp_related = MagicMock()
+        resp_related.status_code = 200
+        resp_related.json.return_value = {'results': []}
+        
+        mock_get.side_effect = [resp_404, resp_200, resp_clubs, resp_related]
 
         url = reverse('books:detail', kwargs={'book_id': 'gb123'})
         response = self.client.get(url)
@@ -120,8 +133,8 @@ class BookViewsTestCase(TestCase):
         # Page should show an Add to Catalog button
         self.assertContains(response, 'Add to Catalog')
         self.assertContains(response, reverse('books:add', kwargs={'google_book_id': 'gb123'}))
-        # Ensure two calls were made (DB then Google)
-        self.assertEqual(mock_get.call_count, 2)
+        # Verify at least 2 calls were made (DB then Google)
+        self.assertGreaterEqual(mock_get.call_count, 2)
 
     @patch('apps.books.views.requests.get')
     def test_search_renders_links_to_detail(self, mock_get):
@@ -233,3 +246,108 @@ class BookViewsTestCase(TestCase):
         self.assertContains(response, 'Reading')
         self.assertContains(response, 'Completed')
         self.assertContains(response, '76%')  # Progress percentage (75.5 rounded)
+
+    @patch('apps.books.views.requests.get')
+    def test_book_detail_fetches_all_data(self, mock_get):
+        """Test book_detail view fetches book, progress, clubs, and related books."""
+        # Setup multiple mock responses for different API calls
+        mock_book = MagicMock()
+        mock_book.status_code = 200
+        mock_book.json.return_value = {
+            'id': 'testbook123',
+            'title': 'Test Book',
+            'author': 'Test Author',
+            'pageCount': 300,
+            'coverImage': 'http://example.com/cover.jpg'
+        }
+        
+        mock_progress = MagicMock()
+        mock_progress.status_code = 200
+        mock_progress.json.return_value = {
+            'status': 'reading',
+            'currentPage': 150,
+            'progressPercentage': 50.0,
+            'startedAt': '2024-01-01T00:00:00Z'
+        }
+        
+        mock_clubs = MagicMock()
+        mock_clubs.status_code = 200
+        mock_clubs.json.return_value = [
+            {'id': 1, 'name': 'Test Club', 'description': 'A test club'}
+        ]
+        
+        mock_related = MagicMock()
+        mock_related.status_code = 200
+        mock_related.json.return_value = {
+            'results': [
+                {'googleBooksId': 'related1', 'title': 'Related Book', 'author': 'Author'}
+            ]
+        }
+        
+        # Mock get to return different responses for different URLs
+        def side_effect(url, *args, **kwargs):
+            if '/api/books/testbook123' in url and '/related' not in url:
+                return mock_book
+            elif '/api/progress/' in url:
+                return mock_progress
+            elif '/api/clubs/my-clubs' in url:
+                return mock_clubs
+            elif '/related' in url:
+                return mock_related
+            return mock_book
+        
+        mock_get.side_effect = side_effect
+        
+        url = reverse('books:detail', kwargs={'book_id': 'testbook123'})
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'books/detail.html')
+        
+        # Verify context has all expected data
+        context = response.context
+        self.assertIn('book', context)
+        self.assertIn('reading_progress', context)
+        self.assertIn('user_clubs', context)
+        self.assertIn('related_books', context)
+        self.assertIn('reading_stats', context)
+        
+        # Verify reading stats were calculated
+        self.assertIsNotNone(context['reading_stats'])
+        # Verify multiple API calls were made
+        self.assertGreaterEqual(mock_get.call_count, 4)
+
+    @patch('apps.books.views.requests.put')
+    def test_update_progress_success(self, mock_put):
+        """Test updating reading progress successfully."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_put.return_value = mock_response
+        
+        url = reverse('books:update_progress', kwargs={'book_id': 'test123'})
+        response = self.client.post(url, {
+            'current_page': '200',
+            'status': 'reading'
+        })
+        
+        self.assertEqual(response.status_code, 302)  # Redirects to detail
+        mock_put.assert_called_once()
+        call_args = mock_put.call_args
+        self.assertIn('/api/progress/test123', call_args[0][0])
+        self.assertEqual(call_args[1]['json']['currentPage'], 200)
+        self.assertEqual(call_args[1]['json']['status'], 'reading')
+
+    @patch('apps.books.views.requests.delete')
+    def test_remove_book_success(self, mock_delete):
+        """Test removing book from catalog successfully."""
+        mock_response = MagicMock()
+        mock_response.status_code = 204
+        mock_delete.return_value = mock_response
+        
+        url = reverse('books:remove', kwargs={'book_id': 'test123'})
+        response = self.client.post(url)
+        
+        self.assertEqual(response.status_code, 302)  # Redirects to catalog
+        mock_delete.assert_called_once()
+        call_args = mock_delete.call_args
+        self.assertIn('/api/progress/test123', call_args[0][0])
