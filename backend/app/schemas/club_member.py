@@ -4,6 +4,8 @@ from datetime import datetime
 from typing import Optional, Literal
 from pydantic import BaseModel, Field
 
+from app.schemas.user import UserResponse
+
 
 class ClubMemberBase(BaseModel):
     """Base club member schema with common fields."""
@@ -32,6 +34,7 @@ class ClubMemberResponse(ClubMemberBase):
     userId: int
     clubId: int
     joinedAt: datetime
+    user: Optional[UserResponse] = None  # Include user data if available
 
     class Config:
         from_attributes = True

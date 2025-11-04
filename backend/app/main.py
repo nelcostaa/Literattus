@@ -11,7 +11,7 @@ import sys
 
 from app.core.config import settings
 from app.core.database import init_db, close_db
-from app.api import auth, books, clubs, users, progress
+from app.api import auth, books, clubs, users, progress, discussions, club_books
 
 # Configure loguru logger
 logger.remove()
@@ -99,6 +99,8 @@ app.include_router(auth.router, prefix=f"{settings.API_PREFIX}/auth", tags=["Aut
 app.include_router(users.router, prefix=f"{settings.API_PREFIX}/users", tags=["Users"])
 app.include_router(books.router, prefix=f"{settings.API_PREFIX}/books", tags=["Books"])
 app.include_router(clubs.router, prefix=f"{settings.API_PREFIX}/clubs", tags=["Clubs"])
+app.include_router(discussions.router, prefix=f"{settings.API_PREFIX}/clubs", tags=["Discussions"])
+app.include_router(club_books.router, prefix=f"{settings.API_PREFIX}/clubs", tags=["Club Books"])
 app.include_router(progress.router, prefix=f"{settings.API_PREFIX}/progress", tags=["Reading Progress"])
 
 logger.success(f"{settings.APP_NAME} application configured successfully")

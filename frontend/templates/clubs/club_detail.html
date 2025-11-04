@@ -1,0 +1,394 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<!-- Club Detail Page -->
+<div class="max-w-7xl mx-auto px-4 py-8">
+    
+    <!-- 1. Hero Header -->
+    <div class="hero-section mb-8 relative overflow-hidden">
+        <div class="hero-content relative z-10">
+            <h1 class="hero-title animate-fade-in">{{ club.name }}</h1>
+            {% if club.description %}
+                <p class="hero-subtitle animate-fade-in" style="animation-delay: 0.1s;">
+                    {{ club.description }}
+                </p>
+            {% endif %}
+            
+            <!-- Member Count Badge -->
+            <div class="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white font-semibold mt-4 animate-fade-in" style="animation-delay: 0.2s;">
+                <i class="fas fa-users mr-2"></i>
+                {{ member_count }} Member{{ member_count|pluralize }}
+                {% if club.isPrivate %}
+                    <i class="fas fa-lock ml-3 text-sm"></i>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Decorative geometric shapes -->
+        <div class="hero-geometric heart animate-float" style="top: 10%; left: 5%; animation-delay: 0s;"></div>
+        <div class="hero-geometric star animate-float" style="top: 60%; right: 10%; animation-delay: 1s;"></div>
+        <div class="hero-geometric moon animate-float" style="top: 30%; right: 20%; animation-delay: 2s;"></div>
+    </div>
+    
+    <!-- 2. Quick Info Cards Row -->
+    <div class="dashboard-grid mb-8">
+        <!-- Members Card -->
+        <div class="dashboard-card dashboard-card-accent accent-blue animate-slide-left">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">Members</h3>
+                <i class="fas fa-users text-3xl text-blue-500"></i>
+            </div>
+            <div class="text-4xl font-bold text-blue-600 mb-2">{{ member_count }}</div>
+            <p class="text-sm text-gray-600 mb-4">Total members</p>
+            
+            <!-- Member avatars preview -->
+            <div class="flex -space-x-2 overflow-hidden mb-4">
+                {% for member in members|slice:":5" %}
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-cyan-500 flex items-center justify-center text-white font-semibold text-sm ring-2 ring-white">
+                        {% if member.user %}
+                            {{ member.user.firstName.0|default:"U" }}{{ member.user.lastName.0|default:"" }}
+                        {% else %}
+                            U
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                {% if member_count > 5 %}
+                    <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-semibold text-xs ring-2 ring-white">
+                        +{{ member_count|add:"-5" }}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <a href="#members-section" class="text-blue-600 hover:text-blue-700 font-semibold text-sm">
+                View All Members →
+            </a>
+        </div>
+        
+        <!-- Books Read Card -->
+        <div class="dashboard-card dashboard-card-accent accent-orange animate-slide-left" style="animation-delay: 0.1s;">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">Books Read</h3>
+                <i class="fas fa-book-open text-3xl text-orange-500"></i>
+            </div>
+            <div class="text-4xl font-bold text-orange-600 mb-2">{{ completed_count }}</div>
+            <p class="text-sm text-gray-600 mb-4">Completed together</p>
+            {% if current_book %}
+                <p class="text-xs text-gray-500 mb-4">
+                    <i class="fas fa-book mr-1"></i> Currently reading
+                </p>
+            {% endif %}
+            <a href="#current-book-section" class="text-orange-600 hover:text-orange-700 font-semibold text-sm">
+                View Current Book →
+            </a>
+        </div>
+        
+        <!-- Activity Card -->
+        <div class="dashboard-card dashboard-card-accent accent-cyan animate-slide-left" style="animation-delay: 0.2s;">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">Activity</h3>
+                <i class="fas fa-comments text-3xl text-cyan-500"></i>
+            </div>
+            <div class="text-4xl font-bold text-cyan-600 mb-2">{{ discussion_count }}</div>
+            <p class="text-sm text-gray-600 mb-4">Discussions</p>
+            {% if discussions %}
+                <p class="text-xs text-gray-500 mb-4">
+                    Last activity: {{ discussions.0.createdAt|date:"M d, Y" }}
+                </p>
+            {% endif %}
+            <a href="#discussions-section" class="text-cyan-600 hover:text-cyan-700 font-semibold text-sm">
+                View All →
+            </a>
+        </div>
+    </div>
+    
+    <!-- 3. Current Book Section -->
+    {% if current_book %}
+    <div id="current-book-section" class="card p-8 mb-8 animate-slide-left" style="animation-delay: 0.3s;">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">
+            <i class="fas fa-book-reader text-blue-600 mr-2"></i>
+            Currently Reading
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Book Cover -->
+            <div class="md:col-span-1">
+                {% if current_book.book.coverImage %}
+                    <img src="{{ current_book.book.coverImage }}" alt="{{ current_book.book.title }}" 
+                         class="book-cover w-full shadow-xl rounded-lg animate-float">
+                {% else %}
+                    <div class="book-cover w-full h-96 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg shadow-xl flex items-center justify-center">
+                        <i class="fas fa-book text-gray-400 text-6xl"></i>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Book Info -->
+            <div class="md:col-span-2">
+                <h3 class="text-3xl font-bold text-gray-900 mb-2">{{ current_book.book.title }}</h3>
+                <p class="text-xl text-gray-600 mb-4">by {{ current_book.book.author }}</p>
+                
+                {% if current_book.book.description %}
+                    <p class="text-gray-700 mb-6 line-clamp-4">{{ current_book.book.description }}</p>
+                {% endif %}
+                
+                <!-- Started Date -->
+                {% if current_book.startedAt %}
+                    <div class="flex items-center text-sm text-gray-600 mb-4">
+                        <i class="fas fa-calendar-alt mr-2"></i>
+                        Started: {{ current_book.startedAt|date:"F d, Y" }}
+                    </div>
+                {% endif %}
+                
+                <!-- Action Buttons -->
+                <div class="flex flex-wrap gap-3 mt-6">
+                    <a href="{% url 'books:detail' current_book.bookId %}" class="btn-primary">
+                        <i class="fas fa-eye mr-2"></i> View Book Details
+                    </a>
+                    {% if is_member %}
+                        <a href="#discussions-section" class="btn-secondary">
+                            <i class="fas fa-comments mr-2"></i> Start Discussion
+                        </a>
+                    {% endif %}
+                    {% if is_owner %}
+                        <button class="btn-outline" onclick="alert('Vote for next book feature coming soon!')">
+                            <i class="fas fa-vote-yea mr-2"></i> Vote for Next Book
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+        <div class="card p-12 text-center mb-8">
+            <i class="fas fa-book text-6xl text-gray-300 mb-4"></i>
+            <h3 class="text-2xl font-bold text-gray-900 mb-3">No Current Book</h3>
+            <p class="text-gray-600 mb-6">This club hasn't selected a book to read yet.</p>
+            {% if is_member %}
+                <button class="btn-primary" onclick="alert('Nominate book feature coming soon!')">
+                    <i class="fas fa-plus mr-2"></i> Nominate a Book
+                </button>
+            {% endif %}
+        </div>
+    {% endif %}
+    
+    <!-- 4. Members Grid -->
+    <div id="members-section" class="card p-8 mb-8 animate-slide-left" style="animation-delay: 0.4s;">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">
+            <i class="fas fa-users text-blue-600 mr-2"></i>
+            Club Members
+        </h2>
+        
+        <div class="feature-grid">
+            {% for member in members %}
+                <div class="card p-6 hover:shadow-xl transition-shadow">
+                    <!-- Avatar -->
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-400 to-cyan-500 flex items-center justify-center text-white font-bold text-2xl">
+                        {% if member.user %}
+                            {{ member.user.firstName.0|default:"U" }}{{ member.user.lastName.0|default:"" }}
+                        {% else %}
+                            U
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Name -->
+                    <h3 class="text-lg font-semibold text-gray-900 text-center mb-1">
+                        {% if member.user %}
+                            {{ member.user.firstName }} {{ member.user.lastName }}
+                        {% else %}
+                            User #{{ member.userId }}
+                        {% endif %}
+                    </h3>
+                    {% if member.user %}
+                        <p class="text-sm text-gray-500 text-center mb-3">@{{ member.user.username }}</p>
+                    {% endif %}
+                    
+                    <!-- Role Badge -->
+                    {% if member.role == "owner" %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-700 mb-2">
+                            <i class="fas fa-crown mr-1"></i> Owner
+                        </span>
+                    {% elif member.role == "admin" %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 mb-2">
+                            <i class="fas fa-shield-alt mr-1"></i> Admin
+                        </span>
+                    {% else %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 mb-2">
+                            <i class="fas fa-user mr-1"></i> Member
+                        </span>
+                    {% endif %}
+                    
+                    <!-- Join Date -->
+                    <p class="text-xs text-gray-500 text-center mt-2">
+                        Joined {{ member.joinedAt|date:"M Y" }}
+                    </p>
+                </div>
+            {% empty %}
+                <p class="text-gray-600 col-span-full text-center py-8">No members found.</p>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- 5. Discussions List -->
+    <div id="discussions-section" class="card p-8 mb-8 animate-slide-left" style="animation-delay: 0.5s;">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">
+                <i class="fas fa-comments text-blue-600 mr-2"></i>
+                Recent Discussions
+            </h2>
+            {% if is_member %}
+                <button class="btn-secondary" onclick="alert('Create discussion feature coming soon!')">
+                    <i class="fas fa-plus mr-2"></i> New Discussion
+                </button>
+            {% endif %}
+        </div>
+        
+        <div class="space-y-4">
+            {% for discussion in discussions %}
+                <div class="p-6 bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <!-- Discussion Title -->
+                            <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                                {{ discussion.title|default:"Discussion" }}
+                            </h3>
+                            
+                            <!-- Discussion Content Preview -->
+                            <p class="text-gray-700 mb-3 line-clamp-2">{{ discussion.content }}</p>
+                            
+                            <!-- Meta Info -->
+                            <div class="flex items-center text-sm text-gray-500 gap-4">
+                                <span>
+                                    <i class="fas fa-user-circle mr-1"></i>
+                                    Posted by User #{{ discussion.userId }}
+                                </span>
+                                <span>
+                                    <i class="fas fa-clock mr-1"></i>
+                                    {{ discussion.createdAt|date:"M d, Y" }}
+                                </span>
+                                <span>
+                                    <i class="fas fa-book mr-1"></i>
+                                    Book ID: {{ discussion.bookId }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Reply Button -->
+                        {% if is_member %}
+                            <button class="btn-outline ml-4" onclick="alert('Reply feature coming soon!')">
+                                <i class="fas fa-reply mr-2"></i> Reply
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            {% empty %}
+                <div class="text-center py-12">
+                    <i class="fas fa-comments text-6xl text-gray-300 mb-4"></i>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">No Discussions Yet</h3>
+                    <p class="text-gray-600 mb-6">Start the conversation about your club's books!</p>
+                    {% if is_member %}
+                        <button class="btn-primary" onclick="alert('Create discussion feature coming soon!')">
+                            <i class="fas fa-plus mr-2"></i> Create First Discussion
+                        </button>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- 6. Upcoming Books (Voting) -->
+    {% if upcoming_books %}
+    <div class="card p-8 mb-8 animate-slide-left" style="animation-delay: 0.6s;">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">
+                <i class="fas fa-vote-yea text-blue-600 mr-2"></i>
+                Upcoming Books
+            </h2>
+            {% if is_member %}
+                <button class="btn-secondary" onclick="alert('Nominate book feature coming soon!')">
+                    <i class="fas fa-plus mr-2"></i> Nominate a Book
+                </button>
+            {% endif %}
+        </div>
+        
+        <div class="book-grid">
+            {% for book_entry in upcoming_books %}
+                <div class="book-card">
+                    <!-- Book Cover -->
+                    {% if book_entry.book.coverImage %}
+                        <img src="{{ book_entry.book.coverImage }}" alt="{{ book_entry.book.title }}" class="book-cover mb-4">
+                    {% else %}
+                        <div class="book-cover mb-4 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                            <i class="fas fa-book text-gray-400 text-4xl"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Book Info -->
+                    <h3 class="text-lg font-semibold text-gray-900 mb-1 line-clamp-2">
+                        {{ book_entry.book.title }}
+                    </h3>
+                    <p class="text-sm text-gray-600 mb-3">{{ book_entry.book.author }}</p>
+                    
+                    <!-- Status Badge -->
+                    {% if book_entry.status == "voted" %}
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 mb-3">
+                            <i class="fas fa-vote-yea mr-1"></i> Nominated
+                        </span>
+                    {% elif book_entry.status == "planned" %}
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 mb-3">
+                            <i class="fas fa-calendar-check mr-1"></i> Planned
+                        </span>
+                    {% endif %}
+                    
+                    <!-- Vote Button -->
+                    {% if is_member %}
+                        <button class="btn-outline w-full text-sm" onclick="alert('Vote feature coming soon!')">
+                            <i class="fas fa-heart mr-2"></i> Vote
+                        </button>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- 7. Action Buttons (Bottom) -->
+    <div class="card p-6 flex flex-wrap gap-4 justify-between items-center animate-fade-in" style="animation-delay: 0.7s;">
+        <div class="flex flex-wrap gap-4">
+            {% if not is_member %}
+                <form method="post" action="{% url 'clubs:join' club.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-user-plus mr-2"></i> Join Club
+                    </button>
+                </form>
+            {% else %}
+                {% if not is_owner %}
+                    <form method="post" action="{% url 'clubs:leave' club.id %}" 
+                          onsubmit="return confirm('Are you sure you want to leave this club?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-outline border-red-500 text-red-500 hover:bg-red-50">
+                            <i class="fas fa-sign-out-alt mr-2"></i> Leave Club
+                        </button>
+                    </form>
+                {% endif %}
+                
+                <button class="btn-secondary" onclick="alert('Invite members feature coming soon!')">
+                    <i class="fas fa-user-plus mr-2"></i> Invite Members
+                </button>
+            {% endif %}
+        </div>
+        
+        {% if is_owner %}
+            <div class="flex gap-4">
+                <a href="{% url 'clubs:edit' club.id %}" class="btn-outline">
+                    <i class="fas fa-cog mr-2"></i> Club Settings
+                </a>
+            </div>
+        {% endif %}
+    </div>
+    
+</div>
+{% endblock %}
+

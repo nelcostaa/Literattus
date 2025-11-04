@@ -20,138 +20,100 @@
 </div>
 
 <!-- Clubs Grid -->
+{% if clubs %}
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
-    <!-- Club Card 1 -->
+    {% for club in clubs %}
     <div class="card overflow-hidden hover:shadow-xl transition-all duration-300 group">
-        <div class="h-32 bg-gradient-to-br from-blue-500 via-cyan-500 to-blue-400 relative overflow-hidden">
-            <div class="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity">
-                <i class="fas fa-book text-9xl absolute -top-10 -right-10 text-white opacity-20"></i>
+        <!-- Gradient Header (cycling through colors) -->
+        {% if forloop.counter0|divisibleby:3 %}
+            <div class="h-32 bg-gradient-to-br from-blue-500 via-cyan-500 to-blue-400 relative overflow-hidden">
+                <div class="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity">
+                    <i class="fas fa-book text-9xl absolute -top-10 -right-10 text-white opacity-20"></i>
+                </div>
             </div>
-        </div>
+        {% elif forloop.counter0|add:"-1"|divisibleby:3 %}
+            <div class="h-32 bg-gradient-to-br from-orange-500 via-red-500 to-pink-500 relative overflow-hidden">
+                <div class="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity">
+                    <i class="fas fa-rocket text-9xl absolute -top-10 -right-10 text-white opacity-20"></i>
+                </div>
+            </div>
+        {% else %}
+            <div class="h-32 bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 relative overflow-hidden">
+                <div class="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity">
+                    <i class="fas fa-heart text-9xl absolute -top-10 -right-10 text-white opacity-20"></i>
+                </div>
+            </div>
+        {% endif %}
         
         <div class="p-6">
             <div class="flex items-start justify-between mb-3">
-                <div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-1">Classic Literature Club</h3>
-                    <p class="text-sm text-gray-600">Exploring timeless masterpieces</p>
+                <div class="flex-1">
+                    <h3 class="text-xl font-bold text-gray-900 mb-1">{{ club.name }}</h3>
+                    <p class="text-sm text-gray-600">{{ club.description|default:"A book club for passionate readers" }}</p>
                 </div>
                 <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <i class="fas fa-book text-blue-600"></i>
                 </div>
             </div>
             
-            <p class="text-sm text-gray-600 mb-4">Currently reading "Pride and Prejudice" by Jane Austen</p>
+            <!-- Current Book -->
+            {% if club.current_book %}
+                <p class="text-sm text-gray-600 mb-4">
+                    Currently reading "{{ club.current_book.title|truncatewords:8 }}" by {{ club.current_book.author }}
+                </p>
+            {% else %}
+                <p class="text-sm text-gray-500 italic mb-4">No current book selected</p>
+            {% endif %}
             
             <div class="space-y-3 mb-4 pb-4 border-b border-gray-200">
                 <div class="flex items-center text-sm">
                     <i class="fas fa-users text-cyan-600 mr-2 w-4"></i>
-                    <span class="text-gray-700"><span class="font-semibold">12</span> members</span>
+                    <span class="text-gray-700"><span class="font-semibold">{{ club.member_count|default:0 }}</span> member{{ club.member_count|pluralize }}</span>
                 </div>
                 <div class="flex items-center text-sm">
                     <i class="fas fa-calendar text-orange-500 mr-2 w-4"></i>
-                    <span class="text-gray-700">Est. 2024</span>
+                    <span class="text-gray-700">Est. {{ club.createdAt|date:"Y" }}</span>
                 </div>
                 <div class="flex items-center text-sm">
                     <i class="fas fa-comments text-blue-600 mr-2 w-4"></i>
-                    <span class="text-gray-700"><span class="font-semibold">24</span> discussions</span>
+                    <span class="text-gray-700"><span class="font-semibold">{{ club.discussion_count|default:0 }}</span> discussion{{ club.discussion_count|pluralize }}</span>
                 </div>
+                {% if club.isPrivate %}
+                <div class="flex items-center text-sm">
+                    <i class="fas fa-lock text-gray-500 mr-2 w-4"></i>
+                    <span class="text-gray-700">Private Club</span>
+                </div>
+                {% endif %}
             </div>
             
-            <button class="w-full btn-outline py-2 rounded-lg font-semibold text-sm">
-                <i class="fas fa-arrow-right mr-2"></i> View Club
-            </button>
+            <!-- Action Button -->
+            {% if club.is_member %}
+                <a href="{% url 'clubs:detail' club.id %}" class="w-full btn-outline py-2 rounded-lg font-semibold text-sm inline-flex items-center justify-center">
+                    <i class="fas fa-arrow-right mr-2"></i> View Club
+                </a>
+            {% else %}
+                <form method="post" action="{% url 'clubs:join' club.id %}" class="w-full">
+                    {% csrf_token %}
+                    <button type="submit" class="w-full btn-secondary py-2 rounded-lg font-semibold text-sm">
+                        <i class="fas fa-plus mr-2"></i> Join Club
+                    </button>
+                </form>
+            {% endif %}
         </div>
     </div>
-
-    <!-- Club Card 2 -->
-    <div class="card overflow-hidden hover:shadow-xl transition-all duration-300 group">
-        <div class="h-32 bg-gradient-to-br from-orange-500 via-red-500 to-pink-500 relative overflow-hidden">
-            <div class="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity">
-                <i class="fas fa-rocket text-9xl absolute -top-10 -right-10 text-white opacity-20"></i>
-            </div>
-        </div>
-        
-        <div class="p-6">
-            <div class="flex items-start justify-between mb-3">
-                <div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-1">Sci-Fi Explorers</h3>
-                    <p class="text-sm text-gray-600">Journey through galaxies and dimensions</p>
-                </div>
-                <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-rocket text-orange-600"></i>
-                </div>
-            </div>
-            
-            <p class="text-sm text-gray-600 mb-4">Currently reading "Dune" by Frank Herbert</p>
-            
-            <div class="space-y-3 mb-4 pb-4 border-b border-gray-200">
-                <div class="flex items-center text-sm">
-                    <i class="fas fa-users text-cyan-600 mr-2 w-4"></i>
-                    <span class="text-gray-700"><span class="font-semibold">8</span> members</span>
-                </div>
-                <div class="flex items-center text-sm">
-                    <i class="fas fa-calendar text-orange-500 mr-2 w-4"></i>
-                    <span class="text-gray-700">Est. 2023</span>
-                </div>
-                <div class="flex items-center text-sm">
-                    <i class="fas fa-comments text-blue-600 mr-2 w-4"></i>
-                    <span class="text-gray-700"><span class="font-semibold">15</span> discussions</span>
-                </div>
-            </div>
-            
-            <button class="w-full btn-secondary py-2 rounded-lg font-semibold text-sm">
-                <i class="fas fa-plus mr-2"></i> Join Club
-            </button>
-        </div>
-    </div>
-
-    <!-- Club Card 3 -->
-    <div class="card overflow-hidden hover:shadow-xl transition-all duration-300 group">
-        <div class="h-32 bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 relative overflow-hidden">
-            <div class="absolute inset-0 opacity-20 group-hover:opacity-30 transition-opacity">
-                <i class="fas fa-heart text-9xl absolute -top-10 -right-10 text-white opacity-20"></i>
-            </div>
-        </div>
-        
-        <div class="p-6">
-            <div class="flex items-start justify-between mb-3">
-                <div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-1">Romance Readers</h3>
-                    <p class="text-sm text-gray-600">Love, passion, and happily ever afters</p>
-                </div>
-                <div class="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-heart text-pink-600"></i>
-                </div>
-            </div>
-            
-            <p class="text-sm text-gray-600 mb-4">Currently reading "The Seven Husbands..."</p>
-            
-            <div class="space-y-3 mb-4 pb-4 border-b border-gray-200">
-                <div class="flex items-center text-sm">
-                    <i class="fas fa-users text-cyan-600 mr-2 w-4"></i>
-                    <span class="text-gray-700"><span class="font-semibold">34</span> members</span>
-                </div>
-                <div class="flex items-center text-sm">
-                    <i class="fas fa-calendar text-orange-500 mr-2 w-4"></i>
-                    <span class="text-gray-700">Est. 2022</span>
-                </div>
-                <div class="flex items-center text-sm">
-                    <i class="fas fa-comments text-blue-600 mr-2 w-4"></i>
-                    <span class="text-gray-700"><span class="font-semibold">42</span> discussions</span>
-                </div>
-            </div>
-            
-            <button class="w-full btn-outline py-2 rounded-lg font-semibold text-sm">
-                <i class="fas fa-arrow-right mr-2"></i> View Club
-            </button>
-        </div>
-    </div>
+    {% endfor %}
 </div>
-
-<!-- Placeholder for API Integration -->
-<div class="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-gray-700">
-    <i class="fas fa-info-circle text-blue-600 mr-2"></i>
-    <strong>TODO:</strong> Replace mock clubs above with data fetched from <code class="bg-white px-2 py-1 rounded">/api/clubs/</code>
+{% else %}
+<!-- Empty State -->
+<div class="card p-12 text-center animate-fade-in">
+    <i class="fas fa-users text-6xl text-gray-300 mb-4"></i>
+    <h3 class="text-2xl font-bold text-gray-900 mb-3">No Clubs Found</h3>
+    <p class="text-gray-600 mb-6">There are no book clubs available at the moment.</p>
+    <button class="btn-primary">
+        <i class="fas fa-plus mr-2"></i> Create Your First Club
+    </button>
 </div>
+{% endif %}
 {% endblock %}
+
 

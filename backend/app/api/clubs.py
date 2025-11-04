@@ -410,6 +410,10 @@ async def get_club_members(
                 detail="You don't have access to this private club"
             )
     
-    members = db.query(ClubMember).filter(ClubMember.clubId == club_id).all()
+    # Eagerly load user relationship
+    from sqlalchemy.orm import joinedload
+    members = db.query(ClubMember).options(
+        joinedload(ClubMember.user)
+    ).filter(ClubMember.clubId == club_id).all()
     return members
 

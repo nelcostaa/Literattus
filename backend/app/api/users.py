@@ -15,6 +15,41 @@ from app.schemas.user import UserResponse, UserUpdate
 router = APIRouter()
 
 
+@router.get("/search", response_model=List[UserResponse])
+async def search_users(
+    q: str,
+    limit: int = 20,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Search users by username, email, or name.
+    
+    Args:
+        q: Search query string
+        limit: Maximum number of results to return
+        db: Database session
+        current_user: Current authenticated user
+        
+    Returns:
+        List[UserResponse]: List of matching users
+    """
+    if not q or len(q) < 2:
+        return []
+    
+    search_term = f"%{q}%"
+    users = db.query(User).filter(
+        User.isActive == True
+    ).filter(
+        (User.username.like(search_term)) |
+        (User.email.like(search_term)) |
+        (User.firstName.like(search_term)) |
+        (User.lastName.like(search_term))
+    ).limit(limit).all()
+    
+    return users
+
+
 @router.get("/", response_model=List[UserResponse])
 async def get_users(
     skip: int = 0,
