@@ -114,11 +114,11 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <!-- Book Cover -->
             <div class="md:col-span-1">
-                {% if current_book.book.coverImage %}
-                    <img src="{{ current_book.book.coverImage }}" alt="{{ current_book.book.title }}" 
-                         class="book-cover w-full shadow-xl rounded-lg animate-float">
+                {% if current_book.book and current_book.book.coverImage %}
+                    <img src="{{ current_book.book.coverImage }}" alt="{{ current_book.book.title|default:'Book cover' }}" 
+                         class="w-full h-96 object-cover shadow-xl rounded-lg animate-float">
                 {% else %}
-                    <div class="book-cover w-full h-96 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg shadow-xl flex items-center justify-center">
+                    <div class="w-full h-96 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg shadow-xl flex items-center justify-center">
                         <i class="fas fa-book text-gray-400 text-6xl"></i>
                     </div>
                 {% endif %}
@@ -126,11 +126,16 @@
             
             <!-- Book Info -->
             <div class="md:col-span-2">
-                <h3 class="text-3xl font-bold text-gray-900 mb-2">{{ current_book.book.title }}</h3>
-                <p class="text-xl text-gray-600 mb-4">by {{ current_book.book.author }}</p>
-                
-                {% if current_book.book.description %}
-                    <p class="text-gray-700 mb-6 line-clamp-4">{{ current_book.book.description }}</p>
+                {% if current_book.book %}
+                    <h3 class="text-3xl font-bold text-gray-900 mb-2">{{ current_book.book.title|default:"Unknown Book" }}</h3>
+                    <p class="text-xl text-gray-600 mb-4">by {{ current_book.book.author|default:"Unknown Author" }}</p>
+                    
+                    {% if current_book.book.description %}
+                        <p class="text-gray-700 mb-6 line-clamp-4">{{ current_book.book.description }}</p>
+                    {% endif %}
+                {% else %}
+                    <h3 class="text-3xl font-bold text-gray-900 mb-2">Loading book details...</h3>
+                    <p class="text-xl text-gray-600 mb-4">Book ID: {{ current_book.bookId }}</p>
                 {% endif %}
                 
                 <!-- Started Date -->
@@ -143,9 +148,11 @@
                 
                 <!-- Action Buttons -->
                 <div class="flex flex-wrap gap-3 mt-6">
-                    <a href="{% url 'books:detail' current_book.bookId %}" class="btn-primary">
-                        <i class="fas fa-eye mr-2"></i> View Book Details
-                    </a>
+                    {% if current_book.bookId %}
+                        <a href="{% url 'books:detail' current_book.bookId %}" class="btn-primary">
+                            <i class="fas fa-eye mr-2"></i> View Book Details
+                        </a>
+                    {% endif %}
                     {% if is_member %}
                         <a href="#discussions-section" class="btn-secondary">
                             <i class="fas fa-comments mr-2"></i> Start Discussion

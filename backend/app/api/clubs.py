@@ -264,7 +264,7 @@ async def delete_club(
     return None
 
 
-@router.post("/{club_id}/join", response_model=ClubMemberResponse)
+@router.post("/{club_id}/join", response_model=ClubMemberResponse, status_code=status.HTTP_201_CREATED)
 async def join_club(
     club_id: int,
     db: Session = Depends(get_db),

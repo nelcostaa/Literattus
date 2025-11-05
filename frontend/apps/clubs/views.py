@@ -231,6 +231,25 @@ def club_detail(request, club_id):
     except requests.exceptions.RequestException as e:
         logger.warning(f"Could not fetch club books: {e}")
     
+    # Fetch full book details for current book if exists
+    if current_book and current_book.get('bookId'):
+        try:
+            book_response = requests.get(
+                f"{settings.FASTAPI_BACKEND_URL}/api/books/{current_book.get('bookId')}",
+                headers=headers,
+                timeout=10
+            )
+            
+            if book_response.status_code == 200:
+                book_data = book_response.json()
+                # Merge book details into current_book dict
+                current_book['book'] = book_data
+            else:
+                logger.warning(f"Could not fetch book details for {current_book.get('bookId')}")
+                
+        except requests.exceptions.RequestException as e:
+            logger.warning(f"Error fetching book details: {e}")
+    
     try:
         # 4. Fetch club discussions (top-level only)
         discussions_response = requests.get(
@@ -298,19 +317,25 @@ def join_club(request, club_id):
             timeout=10
         )
         
-        if response.status_code == 201:
+        if response.status_code in [200, 201]:
             messages.success(request, 'Successfully joined the club!')
         elif response.status_code == 400:
-            error_detail = response.json().get('detail', 'Unable to join club')
-            messages.error(request, error_detail)
+            try:
+                error_detail = response.json().get('detail', 'Unable to join club')
+                messages.error(request, error_detail)
+            except (ValueError, KeyError):
+                messages.error(request, 'Unable to join club. Please try again.')
         elif response.status_code == 404:
             messages.error(request, 'Club not found')
+        elif response.status_code == 403:
+            messages.error(request, 'You do not have permission to join this club')
         else:
-            messages.warning(request, 'Unable to join club at this time')
+            logger.warning(f"Unexpected status code {response.status_code} when joining club {club_id}")
+            messages.warning(request, 'Unable to join club at this time. Please try again.')
             
     except requests.exceptions.RequestException as e:
         logger.error(f"Error joining club {club_id}: {e}")
-        messages.error(request, 'Unable to connect to club service')
+        messages.error(request, 'Unable to connect to club service. Please try again.')
     
     return redirect('clubs:detail', club_id=club_id)
 
