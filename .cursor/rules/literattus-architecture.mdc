@@ -186,6 +186,109 @@ frontend/apps/
 - **Type hints:** All parameters and return values
 - **Descriptive names:** `book_detail()`, `create_club()`, `submit_review()`
 
+#### **Related Data Fetching Pattern (CRITICAL)**
+When an API returns objects containing **foreign key IDs or references** (e.g., `bookId`, `userId`, `clubId`), and your template needs the **full object details**, you **MUST** fetch the related data separately:
+
+```python
+# ✅ GOOD: Fetch related data when needed
+def club_detail(request: HttpRequest, club_id: int) -> HttpResponse:
+    """Display club details with full book information."""
+    # ... fetch club and club_books ...
+    
+    current_book = None
+    for book_entry in club_books:
+        if book_entry.get('status') == 'current':
+            current_book = book_entry
+            break
+    
+    # CRITICAL: Fetch full book details if current_book exists
+    if current_book and current_book.get('bookId'):
+        try:
+            book_response = requests.get(
+                f"{settings.FASTAPI_BACKEND_URL}/api/books/{current_book.get('bookId')}",
+                headers=headers,
+                timeout=10
+            )
+            if book_response.status_code == 200:
+                book_data = book_response.json()
+                current_book['book'] = book_data  # Merge full details
+        except requests.exceptions.RequestException as e:
+            logger.warning(f"Error fetching book details: {e}")
+    
+    # Now template can safely access current_book.book.title, current_book.book.coverImage, etc.
+    context = {'current_book': current_book, ...}
+    return render(request, 'clubs/detail.html', context)
+
+# ❌ BAD: Assuming API returns full nested objects
+def club_detail(request: HttpRequest, club_id: int) -> HttpResponse:
+    # ... fetch club_books ...
+    current_book = club_books[0]  # Only has bookId, not full book details!
+    # Template will fail when accessing current_book.book.title
+```
+
+**Pattern Recognition:**
+- If an API response contains `bookId` (string ID) but template needs `book.title`, `book.coverImage`, etc., fetch the full book object
+- If an API response contains `userId` but template needs `user.name`, `user.email`, fetch the full user object
+- Always check if the related data fetch succeeded before using it in templates
+
+#### **HTTP Status Code Resilience**
+Frontend views should accept **multiple success status codes** for robustness, not just one specific code:
+
+```python
+# ✅ GOOD: Accept multiple success codes
+response = requests.post(
+    f"{settings.FASTAPI_BACKEND_URL}/api/clubs/{club_id}/join",
+    headers=headers,
+    timeout=10
+)
+
+if response.status_code in [200, 201, 204]:  # Accept common success codes
+    messages.success(request, 'Successfully joined club!')
+    return redirect('clubs:detail', club_id=club_id)
+elif response.status_code == 400:
+    error_data = response.json()
+    messages.error(request, error_data.get('detail', 'Invalid request'))
+elif response.status_code == 403:
+    messages.error(request, "You don't have permission to join this club")
+elif response.status_code == 404:
+    messages.error(request, 'Club not found')
+else:
+    messages.error(request, 'Unable to join club')
+
+# ❌ BAD: Only checking for one specific code
+if response.status_code == 201:  # May fail if backend returns 200
+    messages.success(request, 'Success!')
+else:
+    messages.error(request, 'Failed!')  # Misleading error for 200 OK
+```
+
+**Rule:** Accept `200` (OK), `201` (Created), and `204` (No Content) as success codes unless the operation specifically requires a different code.
+
+#### **Template Data Validation**
+Templates must **defensively check** for nested data existence before accessing nested properties:
+
+```html
+<!-- ✅ GOOD: Defensive checking -->
+{% if current_book.book and current_book.book.coverImage %}
+    <img src="{{ current_book.book.coverImage }}" alt="{{ current_book.book.title|default:'Book cover' }}">
+{% else %}
+    <div class="placeholder">No cover available</div>
+{% endif %}
+
+{% if current_book.book %}
+    <h3>{{ current_book.book.title|default:"Unknown Book" }}</h3>
+    <p>by {{ current_book.book.author|default:"Unknown Author" }}</p>
+{% else %}
+    <p>Loading book details...</p>
+{% endif %}
+
+<!-- ❌ BAD: Assuming nested data exists -->
+<img src="{{ current_book.book.coverImage }}">  <!-- Will crash if book is None -->
+<h3>{{ current_book.book.title }}</h3>  <!-- Will crash if book is missing -->
+```
+
+**Rule:** Always check parent objects exist before accessing nested properties. Use `|default` filters for safe fallbacks.
+
 ```python
 # ✅ GOOD: Backend communication pattern
 from django.shortcuts import render, redirect
@@ -309,9 +412,53 @@ class Book(Base):
 - **Validation:** Use Pydantic for input validation
 - **Documentation:** Docstrings and FastAPI descriptions
 
+#### **HTTP Status Code Clarity (CRITICAL)**
+Always **explicitly set** the appropriate HTTP status code for POST/PUT/DELETE operations. FastAPI defaults to `200 OK` for all operations, which can cause frontend confusion:
+
+```python
+# ✅ GOOD: Explicit status codes
+from fastapi import status
+
+@router.post("/{club_id}/join", status_code=status.HTTP_201_CREATED)
+async def join_club(...):
+    """Join a club - explicitly returns 201 Created."""
+    # ... create membership ...
+    return membership_response
+
+@router.delete("/{club_id}/books/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def remove_club_book(...):
+    """Remove book - explicitly returns 204 No Content."""
+    # ... delete ...
+    return None
+
+@router.get("/{club_id}", status_code=status.HTTP_200_OK)  # Optional but clear
+async def get_club(...):
+    """Get club - returns 200 OK."""
+    return club_response
+
+# ❌ BAD: Relying on defaults
+@router.post("/{club_id}/join")  # Defaults to 200 OK, not 201 Created!
+async def join_club(...):
+    """Join a club."""
+    # Frontend expecting 201 will fail
+    return membership_response
+```
+
+**Status Code Guidelines:**
+- `200 OK`: Successful GET requests, successful PUT updates
+- `201 Created`: Successful POST requests that create new resources
+- `204 No Content`: Successful DELETE requests, or PUT updates that return nothing
+- `400 Bad Request`: Invalid input data
+- `401 Unauthorized`: Missing or invalid authentication
+- `403 Forbidden`: Authenticated but insufficient permissions
+- `404 Not Found`: Resource doesn't exist
+- `422 Unprocessable Entity`: Pydantic validation errors
+
+**Rule:** Always explicitly set `status_code` parameter on route decorators for POST, PUT, and DELETE operations.
+
 ```python
 # ✅ GOOD: Type-hinted, schema-based endpoint
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.schemas.book import BookSchema, BookCreateSchema
 from app.models.book import Book
@@ -325,11 +472,11 @@ async def get_book_detail(
 ) -> BookSchema:
     """Get detailed information about a specific book."""
     if book_id <= 0:
-        raise HTTPException(status_code=400, detail="Invalid book_id")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid book_id")
     
     book = db.query(Book).filter(Book.id == book_id).first()
     if not book:
-        raise HTTPException(status_code=404, detail="Book not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
     
     return BookSchema.from_orm(book)
 ```

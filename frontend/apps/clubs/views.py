@@ -292,6 +292,123 @@ def club_detail(request, club_id):
     return render(request, 'clubs/club_detail.html', context)
 
 
+@require_http_methods(["GET", "POST"])
+@jwt_login_required
+def create_club(request):
+    """
+    Create a new book club.
+    GET: Display club creation form.
+    POST: Submit club creation to FastAPI backend.
+    """
+    if request.method == 'POST':
+        # Extract form data
+        name = request.POST.get('name', '').strip()
+        description = request.POST.get('description', '').strip()
+        cover_image = request.POST.get('coverImage', '').strip()
+        is_private = request.POST.get('isPrivate') == 'on'
+        
+        # Parse max_members, default to 50
+        try:
+            max_members = int(request.POST.get('maxMembers', 50))
+            if max_members < 2:
+                max_members = 2
+            elif max_members > 1000:
+                max_members = 1000
+        except (ValueError, TypeError):
+            max_members = 50
+        
+        # Basic validation
+        errors = []
+        if not name:
+            errors.append('Club name is required')
+        elif len(name) > 200:
+            errors.append('Club name must be 200 characters or less')
+        
+        if not description:
+            errors.append('Club description is required')
+        
+        if cover_image and len(cover_image) > 1000:
+            errors.append('Cover image URL must be 1000 characters or less')
+        
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+            return render(request, 'clubs/club_create.html', {
+                'title': 'Create Club',
+                'form_data': {
+                    'name': name,
+                    'description': description,
+                    'coverImage': cover_image,
+                    'isPrivate': is_private,
+                    'maxMembers': max_members,
+                }
+            })
+        
+        # Prepare request data
+        club_data = {
+            'name': name,
+            'description': description,
+            'isPrivate': is_private,
+            'maxMembers': max_members,
+        }
+        
+        # Add coverImage only if provided
+        if cover_image:
+            club_data['coverImage'] = cover_image
+        
+        try:
+            headers = get_auth_headers(request)
+            response = requests.post(
+                f"{settings.FASTAPI_BACKEND_URL}/api/clubs/",
+                json=club_data,
+                headers=headers,
+                timeout=10
+            )
+            
+            if response.status_code in [200, 201]:
+                club = response.json()
+                messages.success(request, f'Club "{name}" created successfully!')
+                return redirect('clubs:detail', club_id=club.get('id'))
+            elif response.status_code == 400:
+                try:
+                    error_detail = response.json().get('detail', 'Invalid club data')
+                    # Handle Pydantic validation errors (list format)
+                    if isinstance(error_detail, list):
+                        for error in error_detail:
+                            messages.error(request, error.get('msg', 'Validation error'))
+                    else:
+                        messages.error(request, str(error_detail))
+                except (ValueError, KeyError):
+                    messages.error(request, 'Invalid club data. Please check your input.')
+            elif response.status_code == 409:
+                messages.error(request, 'A club with this name already exists. Please choose a different name.')
+            else:
+                logger.warning(f"Unexpected status code {response.status_code} when creating club")
+                messages.error(request, 'Unable to create club. Please try again.')
+                
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error creating club: {e}")
+            messages.error(request, 'Unable to connect to club service. Please try again.')
+        
+        # Return form with data on error
+        return render(request, 'clubs/club_create.html', {
+            'title': 'Create Club',
+            'form_data': {
+                'name': name,
+                'description': description,
+                'coverImage': cover_image,
+                'isPrivate': is_private,
+                'maxMembers': max_members,
+            }
+        })
+    
+    # GET request - show form
+    context = {
+        'title': 'Create Club',
+    }
+    return render(request, 'clubs/club_create.html', context)
+
+
 @jwt_login_required
 def my_clubs(request):
     """Display user's clubs."""

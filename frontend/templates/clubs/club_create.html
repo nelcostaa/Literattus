@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Create Club - Literattus{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="mb-8 animate-fade-in">
+        <div class="flex items-center mb-4">
+            <a href="{% url 'clubs:list' %}" class="text-gray-600 hover:text-gray-900 mr-4">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div>
+                <h1 class="text-4xl font-bold text-gray-900 mb-2">Create New Club</h1>
+                <p class="text-lg text-gray-600">Start a book club and connect with fellow readers</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="card p-8 animate-slide-up">
+        {% if messages %}
+        <div class="mb-6 space-y-3">
+            {% for message in messages %}
+            <div class="message-alert message-{{ message.tags|default:'info' }} rounded-lg px-4 py-3 flex items-center gap-3">
+                <i class="fas {% if message.tags == 'error' %}fa-circle-xmark text-red-500{% elif message.tags == 'success' %}fa-check-circle text-green-500{% else %}fa-info-circle text-blue-500{% endif %}"></i>
+                <span class="text-sm">{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <form method="post" action="{% url 'clubs:create' %}" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- Club Name -->
+            <div class="form-group">
+                <label for="name" class="form-label">
+                    <i class="fas fa-book mr-2 text-blue-600"></i> Club Name *
+                </label>
+                <input 
+                    type="text" 
+                    id="name" 
+                    name="name" 
+                    required
+                    maxlength="200"
+                    value="{{ form_data.name|default:'' }}"
+                    class="form-input"
+                    placeholder="e.g., Sci-Fi Enthusiasts, Mystery Book Club"
+                    autocomplete="off">
+                <p class="text-xs text-gray-500 mt-2">
+                    <i class="fas fa-info-circle mr-1"></i> Choose a unique name for your club (max 200 characters)
+                </p>
+            </div>
+
+            <!-- Description -->
+            <div class="form-group">
+                <label for="description" class="form-label">
+                    <i class="fas fa-align-left mr-2 text-blue-600"></i> Description *
+                </label>
+                <textarea 
+                    id="description" 
+                    name="description" 
+                    required
+                    rows="5"
+                    class="form-input"
+                    placeholder="Describe your club's focus, reading preferences, discussion style, and what makes it special...">{{ form_data.description|default:'' }}</textarea>
+                <p class="text-xs text-gray-500 mt-2">
+                    <i class="fas fa-info-circle mr-1"></i> Help others understand what your club is about
+                </p>
+            </div>
+
+            <!-- Cover Image URL -->
+            <div class="form-group">
+                <label for="coverImage" class="form-label">
+                    <i class="fas fa-image mr-2 text-blue-600"></i> Cover Image URL (Optional)
+                </label>
+                <input 
+                    type="url" 
+                    id="coverImage" 
+                    name="coverImage" 
+                    maxlength="1000"
+                    value="{{ form_data.coverImage|default:'' }}"
+                    class="form-input"
+                    placeholder="https://example.com/club-cover.jpg"
+                    autocomplete="off">
+                <p class="text-xs text-gray-500 mt-2">
+                    <i class="fas fa-info-circle mr-1"></i> Add a cover image URL to personalize your club (optional)
+                </p>
+            </div>
+
+            <!-- Privacy & Settings -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Privacy Setting -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-lock mr-2 text-blue-600"></i> Privacy Settings
+                    </label>
+                    <div class="mt-2 space-y-2">
+                        <label class="flex items-center cursor-pointer">
+                            <input 
+                                type="checkbox" 
+                                id="isPrivate" 
+                                name="isPrivate"
+                                {% if form_data.isPrivate %}checked{% endif %}
+                                class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500">
+                            <span class="ml-3 text-gray-700">
+                                <span class="font-semibold">Private Club</span>
+                                <p class="text-xs text-gray-500 mt-1">Only members can see and join this club</p>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Max Members -->
+                <div class="form-group">
+                    <label for="maxMembers" class="form-label">
+                        <i class="fas fa-users mr-2 text-blue-600"></i> Maximum Members
+                    </label>
+                    <input 
+                        type="number" 
+                        id="maxMembers" 
+                        name="maxMembers" 
+                        min="2"
+                        max="1000"
+                        value="{{ form_data.maxMembers|default:50 }}"
+                        class="form-input"
+                        placeholder="50">
+                    <p class="text-xs text-gray-500 mt-2">
+                        <i class="fas fa-info-circle mr-1"></i> Set the maximum number of members (2-1000)
+                    </p>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 pt-4 border-t border-gray-200">
+                <button 
+                    type="submit" 
+                    class="btn-primary flex-1 inline-flex items-center justify-center gap-2">
+                    <i class="fas fa-plus-circle"></i> Create Club
+                </button>
+                <a 
+                    href="{% url 'clubs:list' %}" 
+                    class="btn-outline flex-1 inline-flex items-center justify-center gap-2">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
