@@ -6,9 +6,15 @@
 <div class="container mx-auto px-4 py-8 max-w-7xl">
     <!-- 1. Breadcrumb Navigation -->
     <div class="mb-6 text-sm animate-fade-in">
-        <a href="{% url 'core:dashboard' %}" class="hover:underline text-blue-600">Dashboard</a> / 
-        <a href="{% url 'books:catalog' %}" class="hover:underline text-blue-600">My Catalog</a> / 
-        <span class="text-gray-600">{{ book.title }}</span>
+        {% if club_id and club %}
+            <a href="{% url 'clubs:detail' club_id %}" class="hover:underline text-blue-600">{{ club.name }}</a> / 
+            <span class="text-gray-600">Nominate Book</span> / 
+            <span class="text-gray-600">{{ book.title }}</span>
+        {% else %}
+            <a href="{% url 'core:dashboard' %}" class="hover:underline text-blue-600">Dashboard</a> / 
+            <a href="{% url 'books:catalog' %}" class="hover:underline text-blue-600">My Catalog</a> / 
+            <span class="text-gray-600">{{ book.title }}</span>
+        {% endif %}
     </div>
 
     {% if book %}
@@ -89,37 +95,51 @@
 
     <!-- 3. Action Buttons Row -->
     <div class="flex flex-wrap gap-4 mb-8 animate-fade-in" style="animation-delay: 0.1s;">
-        {% if in_catalog and reading_progress %}
-            <button onclick="showProgressForm()" class="btn-primary flex-grow sm:flex-grow-0">
-                <i class="fas fa-edit mr-2"></i> Update Progress
-            </button>
-        {% elif in_catalog %}
-            <button onclick="showProgressForm()" class="btn-primary flex-grow sm:flex-grow-0">
-                <i class="fas fa-play mr-2"></i> Start Reading
-            </button>
-        {% else %}
-            <form method="post" action="{% url 'books:add' google_book_id=google_book_id %}" class="inline-block">
+        {% if club_id and club %}
+            <!-- Club Nomination Context: Show only "Nominate to Club" button -->
+            <form method="post" action="{% url 'clubs:nominate_book' club_id google_book_id %}" class="inline-block">
                 {% csrf_token %}
-                <button type="submit" class="btn-primary flex-grow sm:flex-grow-0">
-                    <i class="fas fa-plus-circle mr-2"></i> Add to Catalog
+                <button type="submit" class="btn-primary px-6 py-3 rounded-xl font-semibold flex-grow sm:flex-grow-0 inline-flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                    <i class="fas fa-vote-yea"></i> Nominate to {{ club.name }}
                 </button>
             </form>
-        {% endif %}
-        
-        {% if user_clubs %}
-        <button onclick="showClubSelection()" class="btn-secondary flex-grow sm:flex-grow-0">
-            <i class="fas fa-users mr-2"></i> Add to Club
-        </button>
-        {% endif %}
-        
-        {% if in_catalog %}
-        <form method="post" action="{% url 'books:remove' book_id=google_book_id %}" class="inline-block" 
-              onsubmit="return confirm('Are you sure you want to remove this book from your catalog?');">
-            {% csrf_token %}
-            <button type="submit" class="btn-outline border-red-500 text-red-500 hover:bg-red-50 flex-grow sm:flex-grow-0">
-                <i class="fas fa-trash-alt mr-2"></i> Remove from Catalog
+            <a href="{% url 'clubs:detail' club_id %}" class="btn-outline px-6 py-3 rounded-xl font-semibold flex-grow sm:flex-grow-0 inline-flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105">
+                <i class="fas fa-arrow-left"></i> Back to Club
+            </a>
+        {% else %}
+            <!-- Regular Context: Show reading progress and catalog actions -->
+            {% if in_catalog and reading_progress %}
+                <button onclick="showProgressForm()" class="btn-primary px-6 py-3 rounded-xl font-semibold flex-grow sm:flex-grow-0 inline-flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                    <i class="fas fa-edit mr-2"></i> Update Progress
+                </button>
+            {% elif in_catalog %}
+                <button onclick="showProgressForm()" class="btn-primary px-6 py-3 rounded-xl font-semibold flex-grow sm:flex-grow-0 inline-flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                    <i class="fas fa-play mr-2"></i> Start Reading
+                </button>
+            {% else %}
+                <form method="post" action="{% url 'books:add' google_book_id=google_book_id %}" class="inline-block">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-primary px-6 py-3 rounded-xl font-semibold flex-grow sm:flex-grow-0 inline-flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                        <i class="fas fa-plus-circle mr-2"></i> Add to Catalog
+                    </button>
+                </form>
+            {% endif %}
+            
+            {% if user_clubs %}
+            <button onclick="showClubSelection()" class="btn-secondary px-6 py-3 rounded-xl font-semibold flex-grow sm:flex-grow-0 inline-flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105">
+                <i class="fas fa-users mr-2"></i> Add to Club
             </button>
-        </form>
+            {% endif %}
+            
+            {% if in_catalog %}
+            <form method="post" action="{% url 'books:remove' book_id=google_book_id %}" class="inline-block" 
+                  onsubmit="return confirm('Are you sure you want to remove this book from your catalog?');">
+                {% csrf_token %}
+                <button type="submit" class="btn-outline border-red-500 text-red-500 hover:bg-red-50 px-6 py-3 rounded-xl font-semibold flex-grow sm:flex-grow-0 inline-flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105">
+                    <i class="fas fa-trash-alt mr-2"></i> Remove from Catalog
+                </button>
+            </form>
+            {% endif %}
         {% endif %}
     </div>
 
@@ -130,13 +150,13 @@
                     class="px-4 py-2 rounded-t-lg bg-blue-100 text-blue-700 font-semibold tab-button active">
                 Description
             </button>
-            {% if in_catalog %}
+            {% if in_catalog and not club_id %}
             <button onclick="showTab('progress')" id="tab-progress" 
                     class="px-4 py-2 rounded-t-lg hover:bg-gray-100 tab-button">
                 Reading Progress
             </button>
             {% endif %}
-            {% if user_clubs %}
+            {% if user_clubs and not club_id %}
             <button onclick="showTab('clubs')" id="tab-clubs" 
                     class="px-4 py-2 rounded-t-lg hover:bg-gray-100 tab-button">
                 Add to Club
@@ -187,7 +207,7 @@
     </div>
 
     <!-- Tab Content: Reading Progress (if in catalog) -->
-    {% if in_catalog %}
+    {% if in_catalog and not club_id %}
     <div id="content-progress" class="tab-content hidden">
         <div class="dashboard-card dashboard-card-accent accent-blue animate-slide-left mb-8" style="animation-delay: 0.3s;">
             <h3 class="text-xl font-bold mb-4">Reading Progress</h3>
@@ -290,7 +310,7 @@
                             </select>
                         </div>
                     </div>
-                    <button type="submit" class="btn-primary">
+                    <button type="submit" class="btn-primary px-6 py-3 rounded-xl font-semibold inline-flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
                         <i class="fas fa-save mr-2"></i> Update Progress
                     </button>
                 </form>
@@ -320,7 +340,7 @@
                             </select>
                         </div>
                     </div>
-                    <button type="submit" class="btn-primary">
+                    <button type="submit" class="btn-primary px-6 py-3 rounded-xl font-semibold inline-flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
                         <i class="fas fa-play mr-2"></i> Start Reading
                     </button>
                 </form>
@@ -330,7 +350,7 @@
     {% endif %}
 
     <!-- Tab Content: Club Selection -->
-    {% if user_clubs %}
+    {% if user_clubs and not club_id %}
     <div id="content-clubs" class="tab-content hidden">
         <div class="mb-8 animate-slide-left" style="animation-delay: 0.4s;">
             <h3 class="text-2xl font-bold text-gray-900 mb-6">Select a Club</h3>
@@ -344,7 +364,7 @@
                     <div class="flex items-center justify-between text-sm text-gray-500 mb-4">
                         <span><i class="fas fa-users mr-1"></i> {{ club.memberCount|default:"0" }} members</span>
                     </div>
-                    <button onclick="alert('Suggest to club feature coming soon!')" class="btn-secondary w-full mt-4">
+                    <button onclick="alert('Suggest to club feature coming soon!')" class="btn-secondary w-full mt-4 px-6 py-3 rounded-xl font-semibold inline-flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105">
                         <i class="fas fa-plus mr-2"></i> Suggest to Club
                     </button>
                 </div>
@@ -405,7 +425,7 @@
         </div>
         <h3 class="text-2xl font-bold text-gray-900 mb-3">Book Not Found</h3>
         <p class="text-gray-600 mb-6">We couldn't find the details for this book.</p>
-        <a href="{% url 'books:catalog' %}" class="btn-primary">Return to Catalog</a>
+        <a href="{% url 'books:catalog' %}" class="btn-primary px-6 py-3 rounded-xl font-semibold inline-flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">Return to Catalog</a>
     </div>
     {% endif %}
 </div>

@@ -3,13 +3,28 @@
 {% block content %}
 <!-- Header -->
 <div class="mb-8 animate-fade-in">
-    <h1 class="text-4xl font-bold text-gray-900 mb-2">📚 Search Books</h1>
-    <p class="text-lg text-gray-600">Discover thousands of books from the Google Books API</p>
+    {% if club_id and club %}
+        <div class="flex items-center mb-4">
+            <a href="{% url 'clubs:detail' club_id %}" class="text-gray-600 hover:text-gray-900 mr-4">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div>
+                <h1 class="text-4xl font-bold text-gray-900 mb-2">📚 Search Books to Nominate</h1>
+                <p class="text-lg text-gray-600">Find books to nominate for {{ club.name }}</p>
+            </div>
+        </div>
+    {% else %}
+        <h1 class="text-4xl font-bold text-gray-900 mb-2">📚 Search Books</h1>
+        <p class="text-lg text-gray-600">Discover thousands of books from the Google Books API</p>
+    {% endif %}
 </div>
 
 <!-- Search Form -->
 <div class="card p-6 mb-12 animate-slide-up">
     <form method="get" class="space-y-4">
+        {% if club_id %}
+            <input type="hidden" name="club_id" value="{{ club_id }}">
+        {% endif %}
         <div class="flex gap-3 flex-col sm:flex-row">
             <div class="flex-1">
                 <input 
@@ -59,21 +74,30 @@
             
             <!-- Overlay Action -->
             <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
-                <a href="{% url 'books:detail' book.id %}" class="btn-outline px-2 py-0.5 rounded text-xs text-white border border-white hover:bg-blue-600 whitespace-nowrap">
+                <a href="{% url 'books:detail' book.id %}{% if club_id %}?club_id={{ club_id }}{% endif %}" class="btn-outline px-2 py-0.5 rounded text-xs text-white border border-white hover:bg-blue-600 whitespace-nowrap">
                     <i class="fas fa-eye mr-0.5 text-xs"></i> View Details
                 </a>
-                <form method="post" action="{% url 'books:add' google_book_id=book.id %}" class="w-full">
-                    {% csrf_token %}
-                    <button type="submit" class="btn-secondary px-2 py-0.5 rounded text-xs w-full whitespace-nowrap">
-                        <i class="fas fa-plus mr-0.5 text-xs"></i> Add
-                    </button>
-                </form>
+                {% if club_id %}
+                    <form method="post" action="{% url 'clubs:nominate_book' club_id book.id %}" class="w-full">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-secondary px-2 py-0.5 rounded text-xs w-full whitespace-nowrap">
+                            <i class="fas fa-vote-yea mr-0.5 text-xs"></i> Nominate
+                        </button>
+                    </form>
+                {% else %}
+                    <form method="post" action="{% url 'books:add' google_book_id=book.id %}" class="w-full">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-secondary px-2 py-0.5 rounded text-xs w-full whitespace-nowrap">
+                            <i class="fas fa-plus mr-0.5 text-xs"></i> Add
+                        </button>
+                    </form>
+                {% endif %}
             </div>
         </div>
 
         <!-- Book Info -->
         <div class="book-info">
-            <h3 class="book-title"><a href="{% url 'books:detail' book.id %}" class="hover:text-blue-600 transition-colors">{{ book.title }}</a></h3>
+            <h3 class="book-title"><a href="{% url 'books:detail' book.id %}{% if club_id %}?club_id={{ club_id }}{% endif %}" class="hover:text-blue-600 transition-colors">{{ book.title }}</a></h3>
             <p class="book-author">
                 {% if book.authors %}
                     {{ book.authors|join:", " }}
@@ -99,7 +123,7 @@
     </div>
     <h2 class="text-2xl font-bold text-gray-900 mb-2">No books found</h2>
     <p class="text-gray-600 mb-6">Try searching with different keywords or check your spelling</p>
-    <a href="{% url 'books:search' %}" class="btn-outline px-6 py-2 rounded-lg font-semibold">
+    <a href="{% url 'books:search' %}" class="btn-outline px-6 py-3 rounded-xl font-semibold inline-flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105">
         <i class="fas fa-redo mr-2"></i> New Search
     </a>
 </div>

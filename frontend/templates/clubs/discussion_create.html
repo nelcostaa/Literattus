@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="mb-8 animate-fade-in">
+        <div class="flex items-center mb-4">
+            <a href="{% url 'clubs:detail' club.id %}" class="text-gray-600 hover:text-gray-900 mr-4">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div>
+                <h1 class="text-4xl font-bold text-gray-900 mb-2">Create Discussion</h1>
+                <p class="text-lg text-gray-600">Start a conversation about a book in {{ club.name }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="card p-8 animate-slide-up">
+        {% if messages %}
+        <div class="mb-6 space-y-3">
+            {% for message in messages %}
+            <div class="message-alert message-{{ message.tags|default:'info' }} rounded-lg px-4 py-3 flex items-center gap-3">
+                <i class="fas {% if message.tags == 'error' %}fa-circle-xmark text-red-500{% elif message.tags == 'success' %}fa-check-circle text-green-500{% else %}fa-info-circle text-blue-500{% endif %}"></i>
+                <span class="text-sm">{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <form method="post" action="{% url 'clubs:create_discussion' club.id %}" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- Book Selection -->
+            <div class="form-group">
+                <label for="bookId" class="form-label">
+                    <i class="fas fa-book mr-2 text-blue-600"></i> Select Book *
+                </label>
+                <select 
+                    id="bookId" 
+                    name="bookId" 
+                    required
+                    class="form-select">
+                    <option value="">Choose a book from this club...</option>
+                    {% for club_book in club_books %}
+                        {% if club_book.book %}
+                            <option value="{{ club_book.bookId }}" {% if form_data.bookId == club_book.bookId %}selected{% endif %}>
+                                {{ club_book.book.title }} by {{ club_book.book.author }}
+                                {% if club_book.status == 'current' %}(Currently Reading){% elif club_book.status == 'completed' %}(Completed){% elif club_book.status == 'planned' %}(Planned){% elif club_book.status == 'voted' %}(Nominated){% endif %}
+                            </option>
+                        {% else %}
+                            <option value="{{ club_book.bookId }}" {% if form_data.bookId == club_book.bookId %}selected{% endif %}>
+                                Book ID: {{ club_book.bookId }}
+                            </option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                <p class="text-xs text-gray-500 mt-2">
+                    <i class="fas fa-info-circle mr-1"></i> Select which book this discussion is about
+                </p>
+            </div>
+
+            <!-- Discussion Title (Optional) -->
+            <div class="form-group">
+                <label for="title" class="form-label">
+                    <i class="fas fa-heading mr-2 text-blue-600"></i> Discussion Title (Optional)
+                </label>
+                <input 
+                    type="text" 
+                    id="title" 
+                    name="title" 
+                    maxlength="300"
+                    value="{{ form_data.title|default:'' }}"
+                    class="form-input"
+                    placeholder="e.g., What did you think of Chapter 1?">
+                <p class="text-xs text-gray-500 mt-2">
+                    <i class="fas fa-info-circle mr-1"></i> Add a title to help others find this discussion (optional, max 300 characters)
+                </p>
+            </div>
+
+            <!-- Discussion Content -->
+            <div class="form-group">
+                <label for="content" class="form-label">
+                    <i class="fas fa-align-left mr-2 text-blue-600"></i> Discussion Content *
+                </label>
+                <textarea 
+                    id="content" 
+                    name="content" 
+                    required
+                    rows="8"
+                    class="form-textarea"
+                    placeholder="Share your thoughts, questions, or start a conversation about this book...">{{ form_data.content|default:'' }}</textarea>
+                <p class="text-xs text-gray-500 mt-2">
+                    <i class="fas fa-info-circle mr-1"></i> What would you like to discuss about this book?
+                </p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 pt-4 border-t border-gray-200">
+                <button 
+                    type="submit" 
+                    class="btn-primary flex-1 px-6 py-3 rounded-xl font-semibold inline-flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                    <i class="fas fa-comments"></i> Create Discussion
+                </button>
+                <a 
+                    href="{% url 'clubs:detail' club.id %}" 
+                    class="btn-outline flex-1 px-6 py-3 rounded-xl font-semibold inline-flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

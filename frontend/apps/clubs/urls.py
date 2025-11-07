@@ -13,5 +13,7 @@ urlpatterns = [
     path('<int:club_id>/join/', views.join_club, name='join'),
     path('<int:club_id>/leave/', views.leave_club, name='leave'),
     path('<int:club_id>/edit/', views.edit_club, name='edit'),
+    path('<int:club_id>/discussions/create/', views.create_discussion, name='create_discussion'),
+    path('<int:club_id>/books/nominate/<str:book_id>/', views.nominate_book, name='nominate_book'),
 ]
 

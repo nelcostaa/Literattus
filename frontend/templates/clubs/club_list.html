@@ -88,13 +88,13 @@
             
             <!-- Action Button -->
             {% if club.is_member %}
-                <a href="{% url 'clubs:detail' club.id %}" class="w-full btn-outline py-2 rounded-lg font-semibold text-sm inline-flex items-center justify-center">
+                <a href="{% url 'clubs:detail' club.id %}" class="w-full btn-outline px-4 py-2 rounded-xl font-semibold text-sm inline-flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105">
                     <i class="fas fa-arrow-right mr-2"></i> View Club
                 </a>
             {% else %}
                 <form method="post" action="{% url 'clubs:join' club.id %}" class="w-full">
                     {% csrf_token %}
-                    <button type="submit" class="w-full btn-secondary py-2 rounded-lg font-semibold text-sm">
+                    <button type="submit" class="w-full btn-secondary px-4 py-2 rounded-xl font-semibold text-sm inline-flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105">
                         <i class="fas fa-plus mr-2"></i> Join Club
                     </button>
                 </form>
@@ -109,7 +109,7 @@
     <i class="fas fa-users text-6xl text-gray-300 mb-4"></i>
     <h3 class="text-2xl font-bold text-gray-900 mb-3">No Clubs Found</h3>
     <p class="text-gray-600 mb-6">There are no book clubs available at the moment.</p>
-    <a href="{% url 'clubs:create' %}" class="btn-primary inline-flex items-center gap-2">
+    <a href="{% url 'clubs:create' %}" class="btn-primary px-6 py-3 rounded-xl font-semibold inline-flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
         <i class="fas fa-plus"></i> Create Your First Club
     </a>
 </div>

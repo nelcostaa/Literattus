@@ -250,6 +250,24 @@ def club_detail(request, club_id):
         except requests.exceptions.RequestException as e:
             logger.warning(f"Error fetching book details: {e}")
     
+    # Fetch full book details for upcoming books
+    for book_entry in upcoming_books:
+        book_id = book_entry.get('bookId')
+        if book_id:
+            try:
+                book_response = requests.get(
+                    f"{settings.FASTAPI_BACKEND_URL}/api/books/{book_id}",
+                    headers=headers,
+                    timeout=5
+                )
+                if book_response.status_code == 200:
+                    book_data = book_response.json()
+                    book_entry['book'] = book_data
+                else:
+                    logger.warning(f"Could not fetch book details for {book_id}")
+            except requests.exceptions.RequestException as e:
+                logger.warning(f"Error fetching book details for {book_id}: {e}")
+    
     try:
         # 4. Fetch club discussions (top-level only)
         discussions_response = requests.get(
@@ -290,6 +308,207 @@ def club_detail(request, club_id):
     }
     
     return render(request, 'clubs/club_detail.html', context)
+
+
+@require_http_methods(["GET", "POST"])
+@jwt_login_required
+def create_discussion(request, club_id):
+    """
+    Create a new discussion in a club.
+    GET: Display discussion creation form.
+    POST: Submit discussion creation to FastAPI backend.
+    """
+    club = None
+    club_books = []
+    headers = get_auth_headers(request)
+    user_id = request.session.get('user_id')
+    
+    # Fetch club info for GET and validation
+    try:
+        club_response = requests.get(
+            f"{settings.FASTAPI_BACKEND_URL}/api/clubs/{club_id}",
+            headers=headers,
+            timeout=10
+        )
+        
+        if club_response.status_code == 200:
+            club = club_response.json()
+        elif club_response.status_code == 404:
+            messages.error(request, 'Club not found')
+            return redirect('clubs:list')
+        elif club_response.status_code == 403:
+            messages.error(request, "You don't have access to this private club")
+            return redirect('clubs:list')
+        else:
+            messages.warning(request, 'Unable to load club details')
+            return redirect('clubs:detail', club_id=club_id)
+            
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error fetching club {club_id}: {e}")
+        messages.error(request, 'Unable to connect to club service')
+        return redirect('clubs:detail', club_id=club_id)
+    
+    # Check if user is a member
+    is_member = False
+    try:
+        members_response = requests.get(
+            f"{settings.FASTAPI_BACKEND_URL}/api/clubs/{club_id}/members",
+            headers=headers,
+            timeout=10
+        )
+        
+        if members_response.status_code == 200:
+            members = members_response.json()
+            for member in members:
+                if member.get('userId') == user_id:
+                    is_member = True
+                    break
+                    
+    except requests.exceptions.RequestException as e:
+        logger.warning(f"Could not fetch club members: {e}")
+    
+    if not is_member:
+        messages.error(request, 'You must be a member to create discussions')
+        return redirect('clubs:detail', club_id=club_id)
+    
+    # Fetch club books for dropdown
+    try:
+        books_response = requests.get(
+            f"{settings.FASTAPI_BACKEND_URL}/api/clubs/{club_id}/books",
+            headers=headers,
+            timeout=10
+        )
+        
+        if books_response.status_code == 200:
+            club_books_raw = books_response.json()
+            # Fetch full book details for each club book
+            club_books = []
+            for book_entry in club_books_raw:
+                book_id = book_entry.get('bookId')
+                if book_id:
+                    try:
+                        book_response = requests.get(
+                            f"{settings.FASTAPI_BACKEND_URL}/api/books/{book_id}",
+                            headers=headers,
+                            timeout=5
+                        )
+                        if book_response.status_code == 200:
+                            book_data = book_response.json()
+                            club_books.append({
+                                'bookId': book_id,
+                                'book': book_data,
+                                'status': book_entry.get('status'),
+                            })
+                    except requests.exceptions.RequestException:
+                        # If book fetch fails, still include with just ID
+                        club_books.append({
+                            'bookId': book_id,
+                            'book': None,
+                            'status': book_entry.get('status'),
+                        })
+                        
+    except requests.exceptions.RequestException as e:
+        logger.warning(f"Could not fetch club books: {e}")
+    
+    if request.method == 'POST':
+        # Extract form data
+        title = request.POST.get('title', '').strip()
+        content = request.POST.get('content', '').strip()
+        book_id = request.POST.get('bookId', '').strip()
+        
+        # Basic validation
+        errors = []
+        if not content:
+            errors.append('Discussion content is required')
+        
+        if not book_id:
+            errors.append('Please select a book for this discussion')
+        
+        if title and len(title) > 300:
+            errors.append('Title must be 300 characters or less')
+        
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+            return render(request, 'clubs/discussion_create.html', {
+                'title': f'Create Discussion - {club.get("name", "Club")}',
+                'club': club,
+                'club_books': club_books,
+                'form_data': {
+                    'title': title,
+                    'content': content,
+                    'bookId': book_id,
+                }
+            })
+        
+        # Prepare request data
+        discussion_data = {
+            'clubId': club_id,
+            'bookId': book_id,
+            'content': content,
+        }
+        
+        # Add title only if provided
+        if title:
+            discussion_data['title'] = title
+        
+        try:
+            response = requests.post(
+                f"{settings.FASTAPI_BACKEND_URL}/api/clubs/{club_id}/discussions",
+                json=discussion_data,
+                headers=headers,
+                timeout=10
+            )
+            
+            if response.status_code in [200, 201]:
+                messages.success(request, 'Discussion created successfully!')
+                return redirect('clubs:detail', club_id=club_id)
+            elif response.status_code == 400:
+                try:
+                    error_detail = response.json().get('detail', 'Invalid discussion data')
+                    # Handle Pydantic validation errors (list format)
+                    if isinstance(error_detail, list):
+                        for error in error_detail:
+                            messages.error(request, error.get('msg', 'Validation error'))
+                    else:
+                        messages.error(request, str(error_detail))
+                except (ValueError, KeyError):
+                    messages.error(request, 'Invalid discussion data. Please check your input.')
+            elif response.status_code == 403:
+                messages.error(request, 'You must be a member to create discussions')
+            elif response.status_code == 404:
+                try:
+                    error_detail = response.json().get('detail', 'Resource not found')
+                    messages.error(request, error_detail)
+                except (ValueError, KeyError):
+                    messages.error(request, 'Club or book not found')
+            else:
+                logger.warning(f"Unexpected status code {response.status_code} when creating discussion")
+                messages.error(request, 'Unable to create discussion. Please try again.')
+                
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error creating discussion: {e}")
+            messages.error(request, 'Unable to connect to club service. Please try again.')
+        
+        # Return form with data on error
+        return render(request, 'clubs/discussion_create.html', {
+            'title': f'Create Discussion - {club.get("name", "Club")}',
+            'club': club,
+            'club_books': club_books,
+            'form_data': {
+                'title': title,
+                'content': content,
+                'bookId': book_id,
+            }
+        })
+    
+    # GET request - show form
+    context = {
+        'title': f'Create Discussion - {club.get("name", "Club")}',
+        'club': club,
+        'club_books': club_books,
+    }
+    return render(request, 'clubs/discussion_create.html', context)
 
 
 @require_http_methods(["GET", "POST"])
@@ -498,4 +717,84 @@ def edit_club(request, club_id):
     """
     messages.info(request, 'Club editing feature coming soon!')
     return redirect('clubs:detail', club_id=club_id)
+
+
+@require_http_methods(["POST"])
+@jwt_login_required
+def nominate_book(request, club_id, book_id):
+    """
+    Nominate a book to a club.
+    First ensures the book exists in the database (saves if needed),
+    then creates a club_book entry with status 'voted'.
+    """
+    headers = get_auth_headers(request)
+    
+    try:
+        # 1. First, ensure the book exists in the database
+        # Check if book exists
+        book_check = requests.get(
+            f"{settings.FASTAPI_BACKEND_URL}/api/books/{book_id}",
+            headers=headers,
+            timeout=10
+        )
+        
+        # If book doesn't exist, save it first
+        if book_check.status_code == 404:
+            save_response = requests.post(
+                f"{settings.FASTAPI_BACKEND_URL}/api/books/search-and-save/{book_id}",
+                headers=headers,
+                timeout=10
+            )
+            if save_response.status_code not in [200, 201]:
+                logger.warning(f"Could not save book {book_id}, but continuing with nomination")
+        elif book_check.status_code != 200:
+            messages.error(request, 'Unable to verify book exists')
+            from django.urls import reverse
+            return redirect(f"{reverse('books:detail', kwargs={'book_id': book_id})}?club_id={club_id}")
+        
+        # 2. Nominate the book to the club
+        nomination_data = {
+            'clubId': int(club_id),
+            'bookId': book_id,
+            'status': 'voted'  # Nominations start as 'voted'
+        }
+        
+        response = requests.post(
+            f"{settings.FASTAPI_BACKEND_URL}/api/clubs/{club_id}/books/nominate",
+            json=nomination_data,
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code in [200, 201]:
+            messages.success(request, 'Book nominated successfully!')
+            return redirect('clubs:detail', club_id=club_id)
+        elif response.status_code == 400:
+            try:
+                error_detail = response.json().get('detail', 'Invalid nomination data')
+                messages.error(request, error_detail)
+            except (ValueError, KeyError):
+                messages.error(request, 'Book may already be nominated or in the club reading list')
+        elif response.status_code == 403:
+            messages.error(request, 'You must be a member to nominate books')
+        elif response.status_code == 404:
+            try:
+                error_detail = response.json().get('detail', 'Club or book not found')
+                messages.error(request, error_detail)
+            except (ValueError, KeyError):
+                messages.error(request, 'Club or book not found')
+        else:
+            logger.warning(f"Unexpected status code {response.status_code} when nominating book")
+            messages.error(request, 'Unable to nominate book. Please try again.')
+            
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error nominating book {book_id} to club {club_id}: {e}")
+        messages.error(request, 'Unable to connect to service. Please try again.')
+    except ValueError:
+        messages.error(request, 'Invalid club ID')
+        return redirect('clubs:list')
+    
+    # Redirect back to book detail with club context on error
+    from django.urls import reverse
+    return redirect(f"{reverse('books:detail', kwargs={'book_id': book_id})}?club_id={club_id}")
 

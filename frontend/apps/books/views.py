@@ -62,9 +62,29 @@ def book_catalog(request):
 
 @jwt_login_required
 def book_search(request):
-    """Search for books using Google Books API via backend."""
+    """Search for books using Google Books API via backend.
+    
+    Supports optional club_id query parameter for club nomination context.
+    """
     books = []
     query = request.GET.get('q', '')
+    club_id = request.GET.get('club_id')  # Optional club context for nomination
+    club = None
+    
+    # If club_id is provided, fetch club info
+    if club_id:
+        try:
+            club_id_int = int(club_id)
+            club_response = requests.get(
+                f"{settings.FASTAPI_BACKEND_URL}/api/clubs/{club_id_int}",
+                headers=get_auth_headers(request),
+                timeout=10
+            )
+            if club_response.status_code == 200:
+                club = club_response.json()
+        except (ValueError, requests.exceptions.RequestException) as e:
+            logger.warning(f"Could not fetch club {club_id}: {e}")
+            club_id = None  # Reset if invalid
     
     if query:
         try:
@@ -131,7 +151,9 @@ def book_search(request):
     context = {
         'title': 'Search Books',
         'query': query,
-        'books': books
+        'books': books,
+        'club_id': int(club_id) if club_id else None,  # Pass club_id to template
+        'club': club,  # Pass club info to template
     }
     logger.info(f"Rendering search template with {len(books)} books")
     return render(request, 'books/search.html', context)
@@ -171,14 +193,34 @@ def book_detail(request, book_id):
     """
     Display detailed information about a book.
     Fetches book details, reading progress, user's clubs, and related books.
+    
+    If club_id is provided in query parameters, shows book in club nomination context
+    (hides reading progress, shows "Nominate to Club" button instead).
     """
     book = None
     in_catalog = False
     reading_progress = None
     user_clubs = []
     related_books = []
+    club_id = request.GET.get('club_id')  # Optional club context for nomination
+    club = None
     
     headers = get_auth_headers(request)
+    
+    # If club_id is provided, fetch club info
+    if club_id:
+        try:
+            club_id_int = int(club_id)
+            club_response = requests.get(
+                f"{settings.FASTAPI_BACKEND_URL}/api/clubs/{club_id_int}",
+                headers=headers,
+                timeout=10
+            )
+            if club_response.status_code == 200:
+                club = club_response.json()
+        except (ValueError, requests.exceptions.RequestException) as e:
+            logger.warning(f"Could not fetch club {club_id}: {e}")
+            club_id = None  # Reset if invalid
     
     try:
         # 1. Fetch book details from FastAPI (DB)
@@ -212,8 +254,8 @@ def book_detail(request, book_id):
         messages.error(request, 'Unable to connect to book service')
         return redirect('books:catalog')
     
-    # 2. Fetch reading progress if book is in catalog
-    if in_catalog:
+    # 2. Fetch reading progress if book is in catalog (skip if in club nomination context)
+    if in_catalog and not club_id:
         try:
             progress_response = requests.get(
                 f"{settings.FASTAPI_BACKEND_URL}/api/progress/{book_id}",
@@ -225,17 +267,18 @@ def book_detail(request, book_id):
         except requests.exceptions.RequestException as e:
             logger.warning(f"Could not fetch reading progress: {e}")
     
-    # 3. Fetch user's clubs for "Add to Club" functionality
-    try:
-        clubs_response = requests.get(
-            f"{settings.FASTAPI_BACKEND_URL}/api/clubs/my-clubs",
-            headers=headers,
-            timeout=10
-        )
-        if clubs_response.status_code == 200:
-            user_clubs = clubs_response.json()
-    except requests.exceptions.RequestException as e:
-        logger.warning(f"Could not fetch user clubs: {e}")
+    # 3. Fetch user's clubs for "Add to Club" functionality (skip if in club nomination context)
+    if not club_id:
+        try:
+            clubs_response = requests.get(
+                f"{settings.FASTAPI_BACKEND_URL}/api/clubs/my-clubs",
+                headers=headers,
+                timeout=10
+            )
+            if clubs_response.status_code == 200:
+                user_clubs = clubs_response.json()
+        except requests.exceptions.RequestException as e:
+            logger.warning(f"Could not fetch user clubs: {e}")
     
     # 4. Fetch related books
     try:
@@ -292,6 +335,8 @@ def book_detail(request, book_id):
         'reading_stats': reading_stats,
         'user_clubs': user_clubs,
         'related_books': related_books,
+        'club_id': int(club_id) if club_id else None,  # Pass club_id to template
+        'club': club,  # Pass club info to template
     }
     return render(request, 'books/detail.html', context)
 
@@ -357,17 +402,16 @@ def remove_book(request, book_id):
         
         if response.status_code == 204:
             messages.success(request, 'Book removed from your catalog')
-            return redirect('books:catalog')
         elif response.status_code == 404:
             messages.error(request, 'Book not found in your catalog')
         else:
-            messages.error(request, 'Unable to remove book from catalog')
+            messages.error(request, 'Unable to remove book')
             
     except requests.exceptions.RequestException as e:
         logger.error(f"Error removing book {book_id}: {e}")
         messages.error(request, 'Unable to connect to book service')
     
-    return redirect('books:detail', book_id=book_id)
+    return redirect('books:catalog')
 
 
 # Keep old views for backward compatibility (redirects)

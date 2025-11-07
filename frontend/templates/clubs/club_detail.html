@@ -149,17 +149,17 @@
                 <!-- Action Buttons -->
                 <div class="flex flex-wrap gap-3 mt-6">
                     {% if current_book.bookId %}
-                        <a href="{% url 'books:detail' current_book.bookId %}" class="btn-primary">
+                        <a href="{% url 'books:detail' current_book.bookId %}" class="btn-primary px-6 py-3 rounded-xl font-semibold inline-flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
                             <i class="fas fa-eye mr-2"></i> View Book Details
                         </a>
                     {% endif %}
                     {% if is_member %}
-                        <a href="#discussions-section" class="btn-secondary">
-                            <i class="fas fa-comments mr-2"></i> Start Discussion
+                        <a href="{% url 'clubs:create_discussion' club.id %}" class="btn-secondary px-6 py-3 rounded-xl font-semibold inline-flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105">
+                            <i class="fas fa-comments"></i> Start Discussion
                         </a>
                     {% endif %}
                     {% if is_owner %}
-                        <button class="btn-outline" onclick="alert('Vote for next book feature coming soon!')">
+                        <button class="btn-outline px-6 py-3 rounded-xl font-semibold inline-flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105" onclick="alert('Vote for next book feature coming soon!')">
                             <i class="fas fa-vote-yea mr-2"></i> Vote for Next Book
                         </button>
                     {% endif %}
@@ -173,9 +173,9 @@
             <h3 class="text-2xl font-bold text-gray-900 mb-3">No Current Book</h3>
             <p class="text-gray-600 mb-6">This club hasn't selected a book to read yet.</p>
             {% if is_member %}
-                <button class="btn-primary" onclick="alert('Nominate book feature coming soon!')">
-                    <i class="fas fa-plus mr-2"></i> Nominate a Book
-                </button>
+                <a href="{% url 'books:search' %}?club_id={{ club.id }}" class="btn-primary px-6 py-3 rounded-xl font-semibold inline-flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                    <i class="fas fa-plus"></i> Nominate a Book
+                </a>
             {% endif %}
         </div>
     {% endif %}
@@ -245,9 +245,9 @@
                 Recent Discussions
             </h2>
             {% if is_member %}
-                <button class="btn-secondary" onclick="alert('Create discussion feature coming soon!')">
-                    <i class="fas fa-plus mr-2"></i> New Discussion
-                </button>
+                <a href="{% url 'clubs:create_discussion' club.id %}" class="btn-secondary px-6 py-3 rounded-xl font-semibold inline-flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105">
+                    <i class="fas fa-plus"></i> New Discussion
+                </a>
             {% endif %}
         </div>
         
@@ -283,7 +283,7 @@
                         
                         <!-- Reply Button -->
                         {% if is_member %}
-                            <button class="btn-outline ml-4" onclick="alert('Reply feature coming soon!')">
+                            <button class="btn-outline ml-4 px-4 py-2 rounded-xl font-semibold inline-flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105" onclick="alert('Reply feature coming soon!')">
                                 <i class="fas fa-reply mr-2"></i> Reply
                             </button>
                         {% endif %}
@@ -295,9 +295,9 @@
                     <h3 class="text-xl font-bold text-gray-900 mb-2">No Discussions Yet</h3>
                     <p class="text-gray-600 mb-6">Start the conversation about your club's books!</p>
                     {% if is_member %}
-                        <button class="btn-primary" onclick="alert('Create discussion feature coming soon!')">
-                            <i class="fas fa-plus mr-2"></i> Create First Discussion
-                        </button>
+                        <a href="{% url 'clubs:create_discussion' club.id %}" class="btn-primary px-6 py-3 rounded-xl font-semibold inline-flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                            <i class="fas fa-plus"></i> Create First Discussion
+                        </a>
                     {% endif %}
                 </div>
             {% endfor %}
@@ -313,9 +313,9 @@
                 Upcoming Books
             </h2>
             {% if is_member %}
-                <button class="btn-secondary" onclick="alert('Nominate book feature coming soon!')">
-                    <i class="fas fa-plus mr-2"></i> Nominate a Book
-                </button>
+                        <a href="{% url 'books:search' %}?club_id={{ club.id }}" class="btn-secondary px-6 py-3 rounded-xl font-semibold inline-flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105">
+                            <i class="fas fa-plus"></i> Nominate a Book
+                        </a>
             {% endif %}
         </div>
         
@@ -323,8 +323,8 @@
             {% for book_entry in upcoming_books %}
                 <div class="book-card">
                     <!-- Book Cover -->
-                    {% if book_entry.book.coverImage %}
-                        <img src="{{ book_entry.book.coverImage }}" alt="{{ book_entry.book.title }}" class="book-cover mb-4">
+                    {% if book_entry.book and book_entry.book.coverImage %}
+                        <img src="{{ book_entry.book.coverImage }}" alt="{{ book_entry.book.title|default:'Book cover' }}" class="book-cover mb-4">
                     {% else %}
                         <div class="book-cover mb-4 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
                             <i class="fas fa-book text-gray-400 text-4xl"></i>
@@ -332,10 +332,17 @@
                     {% endif %}
                     
                     <!-- Book Info -->
-                    <h3 class="text-lg font-semibold text-gray-900 mb-1 line-clamp-2">
-                        {{ book_entry.book.title }}
-                    </h3>
-                    <p class="text-sm text-gray-600 mb-3">{{ book_entry.book.author }}</p>
+                    {% if book_entry.book %}
+                        <h3 class="text-lg font-semibold text-gray-900 mb-1 line-clamp-2">
+                            {{ book_entry.book.title|default:"Unknown Title" }}
+                        </h3>
+                        <p class="text-sm text-gray-600 mb-3">{{ book_entry.book.author|default:"Unknown Author" }}</p>
+                    {% else %}
+                        <h3 class="text-lg font-semibold text-gray-900 mb-1 line-clamp-2">
+                            Book ID: {{ book_entry.bookId }}
+                        </h3>
+                        <p class="text-sm text-gray-600 mb-3">Loading details...</p>
+                    {% endif %}
                     
                     <!-- Status Badge -->
                     {% if book_entry.status == "voted" %}
@@ -350,7 +357,7 @@
                     
                     <!-- Vote Button -->
                     {% if is_member %}
-                        <button class="btn-outline w-full text-sm" onclick="alert('Vote feature coming soon!')">
+                        <button class="btn-outline w-full px-4 py-2 rounded-xl font-semibold text-sm inline-flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105" onclick="alert('Vote feature coming soon!')">
                             <i class="fas fa-heart mr-2"></i> Vote
                         </button>
                     {% endif %}
@@ -366,7 +373,7 @@
             {% if not is_member %}
                 <form method="post" action="{% url 'clubs:join' club.id %}">
                     {% csrf_token %}
-                    <button type="submit" class="btn-primary">
+                    <button type="submit" class="btn-primary px-6 py-3 rounded-xl font-semibold inline-flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
                         <i class="fas fa-user-plus mr-2"></i> Join Club
                     </button>
                 </form>
@@ -375,13 +382,13 @@
                     <form method="post" action="{% url 'clubs:leave' club.id %}" 
                           onsubmit="return confirm('Are you sure you want to leave this club?');">
                         {% csrf_token %}
-                        <button type="submit" class="btn-outline border-red-500 text-red-500 hover:bg-red-50">
+                        <button type="submit" class="btn-outline border-red-500 text-red-500 hover:bg-red-50 px-6 py-3 rounded-xl font-semibold inline-flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105">
                             <i class="fas fa-sign-out-alt mr-2"></i> Leave Club
                         </button>
                     </form>
                 {% endif %}
                 
-                <button class="btn-secondary" onclick="alert('Invite members feature coming soon!')">
+                <button class="btn-secondary px-6 py-3 rounded-xl font-semibold inline-flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105" onclick="alert('Invite members feature coming soon!')">
                     <i class="fas fa-user-plus mr-2"></i> Invite Members
                 </button>
             {% endif %}
@@ -389,7 +396,7 @@
         
         {% if is_owner %}
             <div class="flex gap-4">
-                <a href="{% url 'clubs:edit' club.id %}" class="btn-outline">
+                <a href="{% url 'clubs:edit' club.id %}" class="btn-outline px-6 py-3 rounded-xl font-semibold inline-flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105">
                     <i class="fas fa-cog mr-2"></i> Club Settings
                 </a>
             </div>
