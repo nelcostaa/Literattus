@@ -798,3 +798,28 @@ def nominate_book(request, club_id, book_id):
     from django.urls import reverse
     return redirect(f"{reverse('books:detail', kwargs={'book_id': book_id})}?club_id={club_id}")
 
+@require_http_methods(["POST"])
+@jwt_login_required
+def vote_nominated_book(request, book_id, club_id):
+    """
+    Vote for a nominated book, so it 
+    will go to selected book in the club.
+    """
+
+    headers = get_auth_headers(request)
+    vote_response = requests.post(
+        f"{settings.FASTAPI_BACKEND_URL}/api/clubs/{club_id}/books/vote",
+        json=vote_data,
+        headers=headers,
+        timeout=10
+    )
+    
+    if vote_response:
+        messages.success(request, 'Book voted successfully!')
+        return redirect('clubs:detail', club_id=club_id)
+    else:
+        messages.error(request, 'Unable to vote for book. Please try again.')
+        return redirect('clubs:detail', club_id=club_id)
+
+    
+        

@@ -18,8 +18,7 @@
             <div class="flex justify-between items-center h-20">
                 <!-- Logo + Tagline -->
                 <div class="flex-shrink-0 flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center transform -rotate-45">
-                    </div>
+                    <img src="{% static 'images/literratus_logo.png' %}" alt="Literattus Logo" class="w-16 h-16 object-contain">
                     <div class="flex flex-col leading-tight">
                         <a href="{% url 'core:home' %}" class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent hover:scale-105 transition-transform">
                             Literattus
@@ -32,17 +31,17 @@
                 <div class="hidden sm:flex sm:items-center sm:space-x-6">
                     <div class="flex space-x-1">
                         {% if request.session.access_token %}
-                            <a href="{% url 'core:dashboard' %}" class="nav-link nav-link-active px-4 py-2 rounded-lg text-sm font-semibold transition-all">
+                            <a href="{% url 'core:dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}nav-link-active{% endif %} px-4 py-2 rounded-lg text-sm font-semibold transition-all">
                                 <i class="fas fa-chart-line mr-1"></i> Dashboard
                             </a>
-                            <a href="{% url 'books:search' %}" class="nav-link px-4 py-2 rounded-lg text-sm font-semibold transition-all">
+                            <a href="{% url 'books:search' %}" class="nav-link {% if request.resolver_match.namespace == 'books' %}nav-link-active{% endif %} px-4 py-2 rounded-lg text-sm font-semibold transition-all">
                                 <i class="fas fa-search mr-1"></i> Books
                             </a>
-                            <a href="{% url 'clubs:list' %}" class="nav-link px-4 py-2 rounded-lg text-sm font-semibold transition-all">
+                            <a href="{% url 'clubs:list' %}" class="nav-link {% if request.resolver_match.namespace == 'clubs' %}nav-link-active{% endif %} px-4 py-2 rounded-lg text-sm font-semibold transition-all">
                                 <i class="fas fa-users mr-1"></i> Clubs
                             </a>
                         {% else %}
-                            <a href="{% url 'core:home' %}" class="nav-link px-4 py-2 rounded-lg text-sm font-semibold transition-all">
+                            <a href="{% url 'core:home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}nav-link-active{% endif %} px-4 py-2 rounded-lg text-sm font-semibold transition-all">
                                 <i class="fas fa-home mr-1"></i> Home
                             </a>
                         {% endif %}
@@ -88,12 +87,12 @@
             <!-- Mobile Menu -->
             <div id="mobile-menu" class="hidden sm:hidden pb-4 space-y-2">
                 {% if request.session.access_token %}
-                    <a href="{% url 'core:dashboard' %}" class="block px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 font-medium">Dashboard</a>
-                    <a href="{% url 'books:search' %}" class="block px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 font-medium">Books</a>
-                    <a href="{% url 'clubs:list' %}" class="block px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 font-medium">Clubs</a>
+                    <a href="{% url 'core:dashboard' %}" class="block px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 font-medium {% if request.resolver_match.url_name == 'dashboard' %}bg-blue-100 text-blue-700{% endif %}">Dashboard</a>
+                    <a href="{% url 'books:search' %}" class="block px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 font-medium {% if request.resolver_match.namespace == 'books' %}bg-blue-100 text-blue-700{% endif %}">Books</a>
+                    <a href="{% url 'clubs:list' %}" class="block px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 font-medium {% if request.resolver_match.namespace == 'clubs' %}bg-blue-100 text-blue-700{% endif %}">Clubs</a>
                     <a href="{% url 'core:logout' %}" class="block px-4 py-3 rounded-lg hover:bg-red-50 text-gray-700 font-medium">Logout</a>
                 {% else %}
-                    <a href="{% url 'core:home' %}" class="block px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 font-medium">Home</a>
+                    <a href="{% url 'core:home' %}" class="block px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 font-medium {% if request.resolver_match.url_name == 'home' %}bg-blue-100 text-blue-700{% endif %}">Home</a>
                     <a href="{% url 'core:login' %}" class="block px-4 py-3 rounded-lg hover:bg-blue-50 text-gray-700 font-medium">Login</a>
                     <a href="{% url 'core:register' %}" class="block px-4 py-3 rounded-lg bg-blue-600 text-white font-medium">Sign Up</a>
                 {% endif %}
