@@ -75,18 +75,45 @@
                 <p class="text-gray-600 text-sm">Track your current books</p>
             </div>
         </div>
-        <div class="p-4 bg-blue-50 rounded-lg border-2 border-blue-100">
-            <div class="flex justify-between items-center mb-3">
-                <span class="text-sm font-semibold text-blue-900">Current Book</span>
-                <span class="text-xs bg-blue-600 text-white px-3 py-1 rounded-full font-bold">0%</span>
+        {% if current_books %}
+            {% for book in current_books %}
+                <div class="p-4 bg-blue-50 rounded-lg border-2 border-blue-100">
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-blue-900 truncate">{{ book.title }}</p>
+                            <p class="text-xs text-gray-600 truncate">by {{ book.author|default:"Unknown Author" }}</p>
+                        </div>
+                        <span class="text-xs bg-blue-600 text-white px-3 py-1 rounded-full font-bold ml-2 flex-shrink-0">
+                            {{ book.progressPercentage|default:0|floatformat:0 }}%
+                        </span>
+                    </div>
+                    <div class="w-full bg-blue-200 rounded-full h-3 overflow-hidden">
+                        <div class="bg-gradient-to-r from-blue-600 to-cyan-500 h-3 rounded-full transition-all duration-500" style="width: {{ book.progressPercentage|default:0 }}%"></div>
+                    </div>
+                    {% if book.currentPage and book.pageCount %}
+                        <p class="text-xs text-gray-500 mt-3">
+                            <i class="fas fa-book-open mr-1"></i> Page {{ book.currentPage }} of {{ book.pageCount }}
+                        </p>
+                    {% endif %}
+                </div>
+                {% if not forloop.last %}
+                    <div class="my-3 border-t border-gray-200"></div>
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            <div class="p-4 bg-blue-50 rounded-lg border-2 border-blue-100">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-sm font-semibold text-blue-900">No books currently being read</span>
+                    <span class="text-xs bg-blue-600 text-white px-3 py-1 rounded-full font-bold">0%</span>
+                </div>
+                <div class="w-full bg-blue-200 rounded-full h-3 overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-600 to-cyan-500 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+                <p class="text-xs text-gray-500 mt-3 italic">
+                    <i class="fas fa-info-circle mr-1"></i> Start reading to track progress
+                </p>
             </div>
-            <div class="w-full bg-blue-200 rounded-full h-3 overflow-hidden">
-                <div class="bg-gradient-to-r from-blue-600 to-cyan-500 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
-            </div>
-            <p class="text-xs text-gray-500 mt-3 italic">
-                <i class="fas fa-info-circle mr-1"></i> Start reading to track progress
-            </p>
-        </div>
+        {% endif %}
         <div class="mt-6 text-center">
             <a href="{% url 'books:search' %}" class="btn-primary px-6 py-2 rounded-lg text-sm font-semibold inline-block">
                 <i class="fas fa-search mr-2"></i> Find Books

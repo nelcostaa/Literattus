@@ -6,10 +6,19 @@ Handles home page, dashboard, and main application pages.
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
+from django.http import HttpRequest
 import requests
 from django.conf import settings
 from loguru import logger
 from .decorators import jwt_login_required
+
+
+def get_auth_headers(request: HttpRequest) -> dict:
+    """Get Authorization headers from session token."""
+    token = request.session.get('access_token')
+    if token:
+        return {'Authorization': f'Bearer {token}'}
+    return {}
 
 
 def home(request):
@@ -29,10 +38,33 @@ def dashboard(request):
     user_name = request.session.get('user_name', 'User')
     user_email = request.session.get('user_email', '')
     
+    # Get auth headers for API calls
+    headers = get_auth_headers(request)
+    
+    # Fetch books with reading progress - only those currently being read
+    current_books = []
+    try:
+        response = requests.get(
+            f"{settings.FASTAPI_BACKEND_URL}/api/books/my-catalog",
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            all_books = response.json()
+            # Filter to only books with status='reading' (currently being read)
+            current_books = [book for book in all_books if book.get('status') == 'reading']
+        else:
+            logger.warning(f"Failed to fetch catalog: {response.status_code}")
+            
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error fetching catalog: {e}")
+    
     context = {
         'title': 'Dashboard',
         'user_name': user_name,
         'user_email': user_email,
+        'current_books': current_books,
     }
     return render(request, 'main/dashboard.html', context)
 
