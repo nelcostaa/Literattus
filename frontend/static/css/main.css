@@ -560,6 +560,15 @@ body {
     border-left-color: var(--accent-cyan);
 }
 
+.dashboard-card-accent-right {
+    border-left: none;
+    border-right: 5px solid;
+}
+
+.dashboard-card-accent-right.accent-orange {
+    border-right-color: var(--accent-orange);
+}
+
 /* ==========================================
    BOOK GRID
    ========================================== */

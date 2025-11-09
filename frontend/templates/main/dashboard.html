@@ -95,7 +95,7 @@
     </div>
 
     <!-- Active Clubs Card -->
-    <div class="dashboard-card dashboard-card-accent accent-orange animate-slide-right" style="animation-delay: 0.1s;">
+    <div class="dashboard-card dashboard-card-accent dashboard-card-accent-right accent-orange animate-slide-right" style="animation-delay: 0.1s;">
         <div class="card-header">
             <div class="card-icon">
                 <i class="fas fa-users text-orange-600"></i>
@@ -137,55 +137,6 @@
         <div class="mt-4 text-center">
             <a href="{% url 'clubs:list' %}" class="btn-secondary px-6 py-2 rounded-lg text-sm font-semibold inline-block">
                 <i class="fas fa-plus mr-2"></i> Explore Clubs
-            </a>
-        </div>
-    </div>
-
-    <!-- Recommendations Card -->
-    <div class="dashboard-card dashboard-card-accent accent-cyan animate-slide-right" style="animation-delay: 0.2s;">
-        <div class="card-header">
-            <div class="card-icon">
-                <i class="fas fa-sparkles text-cyan-600"></i>
-            </div>
-            <div>
-                <h2 class="card-title">For You</h2>
-                <p class="text-gray-600 text-sm">Personalized picks</p>
-            </div>
-        </div>
-        <div class="space-y-3">
-            <div class="p-3 bg-cyan-50 rounded-lg border border-cyan-200 hover:shadow-md transition-all cursor-pointer">
-                <div class="flex items-start gap-3">
-                    <div class="w-12 h-16 bg-gradient-to-br from-cyan-200 to-blue-300 rounded flex items-center justify-center text-2xl flex-shrink-0">
-                        📖
-                    </div>
-                    <div>
-                        <p class="font-bold text-gray-900 text-sm">The Midnight Library</p>
-                        <p class="text-xs text-gray-600 mt-1">
-                            <i class="fas fa-user-circle mr-1"></i> Recommended by Sarah M.
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <div class="p-3 bg-cyan-50 rounded-lg border border-cyan-200 hover:shadow-md transition-all cursor-pointer">
-                <div class="flex items-start gap-3">
-                    <div class="w-12 h-16 bg-gradient-to-br from-purple-200 to-pink-300 rounded flex items-center justify-center text-2xl flex-shrink-0">
-                        🧪
-                    </div>
-                    <div>
-                        <p class="font-bold text-gray-900 text-sm">Lessons in Chemistry</p>
-                        <p class="text-xs text-gray-600 mt-1">
-                            <i class="fas fa-fire mr-1"></i> Trending in your clubs
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <p class="text-xs text-gray-500 mt-4 text-center italic">
-            <i class="fas fa-flask mr-1"></i> Mock data - TODO: Fetch from backend
-        </p>
-        <div class="mt-4 text-center">
-            <a href="{% url 'books:search' %}" class="btn-outline px-6 py-2 rounded-lg text-sm font-semibold inline-block">
-                <i class="fas fa-compass mr-2"></i> Discover More
             </a>
         </div>
     </div>
