@@ -4,17 +4,6 @@
 <!-- Welcome Hero Section -->
 <div class="hero-section mb-12 animate-fade-in">
     <div class="hero-content">
-        <!-- Decorative geometric shapes -->
-        <div class="absolute hero-geometric heart animate-float" style="animation-delay: 0s;">
-            <i class="fas fa-heart"></i>
-        </div>
-        <div class="absolute hero-geometric star animate-float" style="animation-delay: 0.5s;">
-            <i class="fas fa-star"></i>
-        </div>
-        <div class="absolute hero-geometric moon animate-float" style="animation-delay: 1s;">
-            <i class="fas fa-moon"></i>
-        </div>
-
         <h1 class="hero-title" style="font-size: 48px;">
             Welcome back, {{ request.session.user_name|default:"Reader" }}! 📚
         </h1>
