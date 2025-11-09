@@ -2,6 +2,54 @@
 
 Simple scripts to manage your Literattus development environment.
 
+## Database Triggers and Procedures
+
+The project includes database triggers and stored procedures for audit logging and statistics.
+
+### Setup
+
+Apply triggers and procedures to your database:
+
+```bash
+# Using Python script (recommended)
+python3 scripts/apply_triggers_procedures.py
+
+# Or manually via MySQL
+mysql -u root -p literattus < scripts/triggers_and_procedures.sql
+```
+
+### What's Included
+
+1. **Audit Log Table** (`audit_log`)
+   - Tracks all changes to the `reading_progress` table
+   - Records INSERT, UPDATE, and DELETE operations
+   - Stores old and new values in JSON format
+
+2. **Triggers** (on `reading_progress` table)
+   - `trg_reading_progress_insert` - Logs new reading progress entries
+   - `trg_reading_progress_update` - Logs updates to reading progress
+   - `trg_reading_progress_delete` - Logs deletions of reading progress
+
+3. **Stored Procedure** (`sp_get_user_reading_stats`)
+   - Returns comprehensive reading statistics for a user
+   - Includes: total books, reading/completed counts, pages read, average rating, etc.
+   - Usage: `CALL sp_get_user_reading_stats(user_id);`
+
+### Example Usage
+
+```sql
+-- View recent audit log entries
+SELECT * FROM audit_log 
+ORDER BY changed_at DESC 
+LIMIT 10;
+
+-- Get reading statistics for user ID 1
+CALL sp_get_user_reading_stats(1);
+
+-- View all triggers
+SHOW TRIGGERS WHERE `Table` = 'reading_progress';
+```
+
 ## Quick Start
 
 ```bash
