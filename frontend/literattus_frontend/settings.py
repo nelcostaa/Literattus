@@ -51,6 +51,7 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
 CRISPY_TEMPLATE_PACK = "tailwind"
 
 MIDDLEWARE = [
+    'apps.core.middleware.HealthCheckMiddleware',  # Health check FIRST - before SecurityMiddleware
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # Static files
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -152,11 +153,15 @@ CSRF_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_HTTPONLY = True
 
 # Security Settings (Production)
+# Note: SECURE_SSL_REDIRECT is disabled because ALB handles SSL termination
+# When using ALB with HTTP listener, disable SSL redirect in Django
+# SSL can be enabled at ALB level later with HTTPS listener
 if not DEBUG:
-    SECURE_SSL_REDIRECT = True
+    SECURE_SSL_REDIRECT = False  # Disabled - ALB handles SSL termination
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
+    # Keep secure cookies disabled since we're using HTTP at ALB level
+    SESSION_COOKIE_SECURE = False  # Set to True when ALB has HTTPS listener
+    CSRF_COOKIE_SECURE = False  # Set to True when ALB has HTTPS listener
 

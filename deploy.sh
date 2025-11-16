@@ -23,18 +23,19 @@ aws ecr get-login-REDACTED --region $AWS_REGION | docker login --username AWS --
 echo ""
 echo "🔨 Building and pushing backend..."
 cd backend
-docker build -t $ECR_REPO_BACKEND:latest .
-docker tag $ECR_REPO_BACKEND:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_BACKEND:latest
-docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_BACKEND:latest
+# Run docker commands using sudo but reuse the user's docker config for authentication
+sudo -E DOCKER_CONFIG="/home/nelso/.docker" docker build -t $ECR_REPO_BACKEND:latest .
+sudo -E DOCKER_CONFIG="/home/nelso/.docker" docker tag $ECR_REPO_BACKEND:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_BACKEND:latest
+sudo -E DOCKER_CONFIG="/home/nelso/.docker" docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_BACKEND:latest
 cd ..
 
 # 3. Build and push frontend
 echo ""
 echo "🔨 Building and pushing frontend..."
 cd frontend
-docker build -t $ECR_REPO_FRONTEND:latest .
-docker tag $ECR_REPO_FRONTEND:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_FRONTEND:latest
-docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_FRONTEND:latest
+sudo -E DOCKER_CONFIG="/home/nelso/.docker" docker build -t $ECR_REPO_FRONTEND:latest .
+sudo -E DOCKER_CONFIG="/home/nelso/.docker" docker tag $ECR_REPO_FRONTEND:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_FRONTEND:latest
+sudo -E DOCKER_CONFIG="/home/nelso/.docker" docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO_FRONTEND:latest
 cd ..
 
 # 4. Update image URLs in task definitions

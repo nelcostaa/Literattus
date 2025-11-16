@@ -11,6 +11,7 @@ import requests
 from django.conf import settings
 from loguru import logger
 from .decorators import jwt_login_required
+from .utils import get_backend_url
 
 
 def get_auth_headers(request: HttpRequest) -> dict:
@@ -26,6 +27,12 @@ def home(request):
     return render(request, 'main/home.html', {
         'title': 'Welcome to Literattus'
     })
+
+
+def health_check(request):
+    """Health check endpoint for ALB and container health checks."""
+    from django.http import JsonResponse
+    return JsonResponse({'status': 'healthy'}, status=200)
 
 
 @jwt_login_required
@@ -44,10 +51,12 @@ def dashboard(request):
     # Fetch books with reading progress - only those currently being read
     current_books = []
     try:
+        backend_url = get_backend_url()
         response = requests.get(
-            f"{settings.FASTAPI_BACKEND_URL}/api/books/my-catalog",
+            f"{backend_url}/api/books/my-catalog",
             headers=headers,
-            timeout=10
+            timeout=10,
+            allow_redirects=False
         )
         
         if response.status_code == 200:
@@ -92,10 +101,12 @@ def login_view(request):
         
         try:
             # Call FastAPI login endpoint
+            backend_url = get_backend_url()
             response = requests.post(
-                f"{settings.FASTAPI_BACKEND_URL}/api/auth/login",
+                f"{backend_url}/api/auth/login",
                 json={"email": email, "REDACTED": REDACTED},
-                timeout=10
+                timeout=10,
+                allow_redirects=False  # Prevent automatic redirects
             )
             
             if response.status_code == 200:
@@ -104,10 +115,12 @@ def login_view(request):
                 
                 # Fetch user data using the access token
                 try:
+                    backend_url = get_backend_url()
                     user_response = requests.get(
-                        f"{settings.FASTAPI_BACKEND_URL}/api/auth/me",
+                        f"{backend_url}/api/auth/me",
                         headers={'Authorization': f'Bearer {access_token}'},
-                        timeout=10
+                        timeout=10,
+                        allow_redirects=False  # Prevent automatic redirects
                     )
                     
                     if user_response.status_code == 200:
@@ -185,8 +198,9 @@ def register_view(request):
         
         try:
             # Call FastAPI register endpoint
+            backend_url = get_backend_url()
             response = requests.post(
-                f"{settings.FASTAPI_BACKEND_URL}/api/auth/register",
+                f"{backend_url}/api/auth/register",
                 json={
                     "email": email,
                     "username": username,
@@ -194,7 +208,8 @@ def register_view(request):
                     "firstName": first_name,
                     "lastName": last_name
                 },
-                timeout=10
+                timeout=10,
+                allow_redirects=False  # Prevent automatic redirects
             )
             
             if response.status_code in [200, 201]:

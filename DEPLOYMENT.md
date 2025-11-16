@@ -152,3 +152,5 @@ aws ecr delete-repository --repository-name literattus-frontend --force --region
 # Delete ALB, target groups, etc. (via AWS Console or CLI)
 ```
 
+
+

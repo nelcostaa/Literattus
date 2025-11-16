@@ -88,3 +88,5 @@ echo "  DB_PASSWORD: arn:aws:secretsmanager:$AWS_REGION:$AWS_ACCOUNT_ID:secret:l
 echo "  SECRET_KEY: arn:aws:secretsmanager:$AWS_REGION:$AWS_ACCOUNT_ID:secret:literattus/secret-key"
 echo ""
 
+
+
