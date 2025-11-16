@@ -1,6 +1,5 @@
 -- ================================================================
 -- Literattus Database Schema - Production Ready
--- Aligned with professor's PDF requirements (Projeto BD - Entrega 1)
 -- ================================================================
 
 -- Create database if it doesn't exist

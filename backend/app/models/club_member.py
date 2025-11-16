@@ -20,7 +20,7 @@ class ClubMember(Base):
         UniqueConstraint("user_id", "club_id", name="uq_user_club"),
     )
 
-    # Primary key
+    # Primary keyommended) or BFG Repo-Cleaner.
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
 
     # Foreign keys
