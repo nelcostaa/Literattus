@@ -153,7 +153,9 @@ docker-compose -f docker-compose.local.yml up -d
 # Windows: Download MySQL Installer
 
 # 4. Setup database schema
-python scripts/db_setup.py
+python scripts/db/db_setup.py
+# 4. Setup database schema
+python scripts/db/db_setup.py
 
 # 5. Test database connection
 python test.py
@@ -381,7 +383,7 @@ python manage.py shell
 python backend/scripts/aws_rds_setup.py
 
 # Google Books sync (legacy)
-python scripts/google_books_sync.py
+python scripts/tools/google_books_sync.py
 ```
 
 ### **Docker (Full Stack)**

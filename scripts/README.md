@@ -12,10 +12,10 @@ Apply triggers and procedures to your database:
 
 ```bash
 # Using Python script (recommended)
-python3 scripts/apply_triggers_procedures.py
+python3 scripts/db/apply_triggers_procedures.py
 
 # Or manually via MySQL
-mysql -u root -p literattus < scripts/triggers_and_procedures.sql
+mysql -u root -p literattus < scripts/db/triggers_and_procedures.sql
 ```
 
 ### What's Included
@@ -53,17 +53,17 @@ SHOW TRIGGERS WHERE `Table` = 'reading_progress';
 ## Quick Start
 
 ```bash
-# After booting your PC
-./scripts/start
+# Start services (via Docker Compose)
+docker-compose up -d
 
 # To stop
-./scripts/stop
+docker-compose down
 
 # Check status
-./scripts/status
+docker-compose ps
 
 # View logs
-./scripts/logs
+docker-compose logs -f
 ```
 
 ## Available Commands
@@ -76,8 +76,11 @@ Start all Literattus services (frontend, backend).
 
 **Examples:**
 ```bash
-./scripts/start              # Normal start
-./scripts/start --force      # Force start (cleans up stuck processes)
+# Normal start (via docker-compose)
+docker-compose up -d
+
+# Force restart (down then up)
+docker-compose down && docker-compose up -d
 ```
 
 ### `./scripts/stop`
