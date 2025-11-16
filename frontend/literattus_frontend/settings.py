@@ -6,6 +6,10 @@ import os
 from pathlib import Path
 import environ
 
+# Configure logging FIRST, before any other imports that might log
+from literattus_frontend.logging_config import logger
+logger.info("Django settings module loading...")
+
 # Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent
 

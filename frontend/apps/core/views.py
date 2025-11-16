@@ -22,6 +22,29 @@ def get_auth_headers(request: HttpRequest) -> dict:
     return {}
 
 
+def safe_render(request, template_name, context=None, status=200):
+    """
+    Safely render a template with error handling.
+    Returns HttpResponse with error message if rendering fails.
+    """
+    from django.http import HttpResponse
+    
+    if context is None:
+        context = {}
+    
+    try:
+        return render(request, template_name, context, status=status)
+    except Exception as e:
+        logger.error(f"Error rendering template {template_name}: {e}", exc_info=True)
+        import traceback
+        logger.error(f"Template render traceback: {traceback.format_exc()}")
+        # Return a simple error response
+        return HttpResponse(
+            f"<h1>Error</h1><p>An error occurred while loading the page. Please try again.</p>",
+            status=500
+        )
+
+
 def home(request):
     """Landing page for non-authenticated users."""
     return render(request, 'main/home.html', {
@@ -97,7 +120,7 @@ def login_view(request):
         
         if not email or not REDACTED:
             messages.error(request, 'Email and REDACTED are required')
-            return render(request, 'auth/login.html', {'title': 'Login'})
+            return safe_render(request, 'auth/login.html', {'title': 'Login'})
         
         try:
             # Call FastAPI login endpoint
@@ -110,59 +133,90 @@ def login_view(request):
             )
             
             if response.status_code == 200:
-                data = response.json()
-                access_token = data['access_token']
-                
-                # Fetch user data using the access token
                 try:
-                    backend_url = get_backend_url()
-                    user_response = requests.get(
-                        f"{backend_url}/api/auth/me",
-                        headers={'Authorization': f'Bearer {access_token}'},
-                        timeout=10,
-                        allow_redirects=False  # Prevent automatic redirects
-                    )
+                    data = response.json()
+                    access_token = data.get('access_token')
                     
-                    if user_response.status_code == 200:
-                        user_data = user_response.json()
+                    if not access_token:
+                        logger.error("Login response missing access_token")
+                        messages.error(request, 'Login failed: Invalid response from server')
+                        return safe_render(request, 'auth/login.html', {'title': 'Login'})
+                    
+                    # Fetch user data using the access token
+                    try:
+                        backend_url = get_backend_url()
+                        user_response = requests.get(
+                            f"{backend_url}/api/auth/me",
+                            headers={'Authorization': f'Bearer {access_token}'},
+                            timeout=10,
+                            allow_redirects=False  # Prevent automatic redirects
+                        )
                         
-                        # Store token and user info in session
-                        request.session['access_token'] = access_token
-                        request.session['refresh_token'] = data.get('refresh_token')
-                        request.session['user_id'] = user_data['id']
-                        request.session['user_email'] = user_data['email']
-                        request.session['user_name'] = f"{user_data['firstName']} {user_data['lastName']}"
-                        request.session['username'] = user_data.get('username', '')
-                        
-                        messages.success(request, f'Welcome back, {user_data["firstName"]}!')
-                        
-                        # Redirect to next page or dashboard
-                        next_url = request.GET.get('next', '/dashboard/')
-                        if next_url.startswith('/'):
-                            return redirect(next_url)
+                        if user_response.status_code == 200:
+                            try:
+                                user_data = user_response.json()
+                                
+                                # Validate required fields
+                                if not all(key in user_data for key in ['id', 'email', 'firstName', 'lastName']):
+                                    logger.error(f"User data missing required fields: {user_data.keys()}")
+                                    messages.error(request, 'Login failed: Invalid user data')
+                                    return safe_render(request, 'auth/login.html', {'title': 'Login'})
+                                
+                                # Store token and user info in session
+                                request.session['access_token'] = access_token
+                                request.session['refresh_token'] = data.get('refresh_token', '')
+                                request.session['user_id'] = user_data['id']
+                                request.session['user_email'] = user_data['email']
+                                request.session['user_name'] = f"{user_data['firstName']} {user_data['lastName']}"
+                                request.session['username'] = user_data.get('username', '')
+                                
+                                messages.success(request, f'Welcome back, {user_data["firstName"]}!')
+                                
+                                # Redirect to next page or dashboard
+                                next_url = request.GET.get('next', '/dashboard/')
+                                if next_url.startswith('/'):
+                                    return redirect(next_url)
+                                else:
+                                    return redirect('core:dashboard')
+                            except (KeyError, ValueError, TypeError) as e:
+                                logger.error(f"Error parsing user data: {e}, data: {user_data}")
+                                messages.error(request, 'Login failed: Invalid user data format')
+                                return safe_render(request, 'auth/login.html', {'title': 'Login'})
                         else:
-                            return redirect('core:dashboard')
-                    else:
-                        logger.error(f"Failed to fetch user data: {user_response.status_code}")
+                            logger.error(f"Failed to fetch user data: {user_response.status_code}, response: {user_response.text[:200]}")
+                            messages.error(request, 'Login failed: Unable to fetch user data')
+                            
+                    except requests.exceptions.RequestException as e:
+                        logger.error(f"Error fetching user data: {e}", exc_info=True)
                         messages.error(request, 'Login failed: Unable to fetch user data')
-                        
-                except requests.exceptions.RequestException as e:
-                    logger.error(f"Error fetching user data: {e}")
-                    messages.error(request, 'Login failed: Unable to fetch user data')
+                except (ValueError, KeyError) as e:
+                    logger.error(f"Error parsing login response: {e}, response: {response.text[:200]}")
+                    messages.error(request, 'Login failed: Invalid response from server')
             else:
                 error_msg = 'Invalid email or REDACTED'
-                if response.status_code == 422:
-                    error_msg = 'Invalid request format'
+                try:
+                    if response.status_code == 422:
+                        error_msg = 'Invalid request format'
+                    elif response.status_code >= 500:
+                        error_msg = 'Server error. Please try again later.'
+                        logger.error(f"Backend returned {response.status_code}: {response.text[:200]}")
+                    else:
+                        error_data = response.json()
+                        error_msg = error_data.get('detail', error_msg)
+                except (ValueError, KeyError):
+                    pass  # Use default error message
                 messages.error(request, error_msg)
                 
         except requests.exceptions.RequestException as e:
-            logger.error(f"Login request failed: {e}")
+            logger.error(f"Login request failed: {e}", exc_info=True)
             messages.error(request, 'Unable to connect to authentication service')
         except Exception as e:
-            logger.error(f"Unexpected error during login: {e}")
+            logger.error(f"Unexpected error during login: {e}", exc_info=True)
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
             messages.error(request, 'An unexpected error occurred')
     
-    return render(request, 'auth/login.html', {'title': 'Login'})
+    return safe_render(request, 'auth/login.html', {'title': 'Login'})
 
 
 @require_http_methods(["GET", "POST"])
