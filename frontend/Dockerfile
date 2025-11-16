@@ -29,6 +29,6 @@ RUN python manage.py collectstatic --noinput || true
 # Expose port
 EXPOSE 8080
 
-# Run gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "3", "literattus_frontend.wsgi:application"]
+# Run migrations at startup then gunicorn (ensures session table exists)
+CMD ["sh", "-c", "python manage.py migrate --noinput && gunicorn --bind 0.0.0.0:8080 --workers 3 literattus_frontend.wsgi:application"]
 

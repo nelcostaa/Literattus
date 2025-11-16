@@ -29,6 +29,24 @@ DEBUG = env('DEBUG', default=True)
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1', '0.0.0.0'])
 
+#
+# Temporary RCA debug override:
+# Set environment variable RCA_DEBUG=1 to force DEBUG=True and show technical 500 page.
+# This must be disabled after diagnosis.
+#
+import os as _os_for_rca
+RCA_DEBUG = _os_for_rca.getenv('RCA_DEBUG', '0')
+if RCA_DEBUG == '1':
+    # Force detailed debug for root-cause analysis only
+    DEBUG = True
+    DEBUG_PROPAGATE_EXCEPTIONS = True
+    # Allow any host to avoid DisallowedHost during RCA
+    ALLOWED_HOSTS = ['*']
+    try:
+        logger.warning("RCA_DEBUG=1 -> DEBUG forced True; showing technical 500 responses.")
+    except Exception:
+        pass
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -155,6 +173,9 @@ SESSION_COOKIE_HTTPONLY = True
 # CSRF Configuration
 CSRF_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_HTTPONLY = True
+# Default session engine: prefer signed cookie backend to avoid requiring a DB for session storage.
+# Can be overridden via SESSION_ENGINE environment variable if needed.
+SESSION_ENGINE = env('SESSION_ENGINE', default='django.contrib.sessions.backends.signed_cookies')
 
 # Security Settings (Production)
 # Note: SECURE_SSL_REDIRECT is disabled because ALB handles SSL termination
